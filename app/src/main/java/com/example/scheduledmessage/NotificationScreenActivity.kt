@@ -267,12 +267,10 @@ class NotificationScreenActivity : AppCompatActivity() {
         val roomName = intent.getStringExtra("room_name") ?: return
         val messageText = intent.getStringExtra("message_text") ?: return
         val roomIconUri = intent.getStringExtra("icon_uri")
-        val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
         val card = NotificationCard(
             roomName = roomName,
             messageText = messageText,
-            roomIconUri = roomIconUri,
-            time = timeStr
+            roomIconUri = roomIconUri
         )
         cardAdapter.addCard(card)
         binding.rvCards.scrollToPosition(0)

@@ -4,69 +4,85 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="#D91C1C1E"
-    app:cardCornerRadius="20dp"
+    android:layout_marginBottom="10dp"
+    app:cardBackgroundColor="#B8232323"
+    app:cardCornerRadius="14dp"
     app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="14dp">
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="14dp"
+        android:paddingTop="11dp"
+        android:paddingBottom="12dp">
 
-        <!-- 상단: 앱 아이콘 + 방 이름 + 시간 -->
+        <!-- 앱 아이콘 (둥근 사각형) -->
+        <ImageView
+            android:id="@+id/ivCardIcon"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="1dp"
+            android:src="@drawable/ic_notification_icon"
+            android:scaleType="centerCrop"
+            android:background="@drawable/bg_card_icon"
+            android:padding="5dp"/>
+
+        <!-- 오른쪽: 앱이름+시간 / 메시지 -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/ivCardIcon"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:src="@drawable/ic_notification_icon"
-                android:scaleType="centerCrop"/>
-
-            <TextView
-                android:id="@+id/tvCardRoomName"
-                android:layout_width="0dp"
+            <!-- 상단 행: 앱 이름 + 상대 시간 -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:text="방 이름"
-                android:textColor="#99EBEBF5"
-                android:textSize="12sp"
-                android:textStyle="normal"
-                android:maxLines="1"
-                android:ellipsize="end"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
+                <TextView
+                    android:id="@+id/tvCardRoomName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="방 이름"
+                    android:textColor="#BFEBEBF5"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    android:maxLines="1"
+                    android:ellipsize="end"/>
+
+                <TextView
+                    android:id="@+id/tvCardTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="방금"
+                    android:textColor="#80EBEBF5"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <!-- 메시지 본문 -->
             <TextView
-                android:id="@+id/tvCardTime"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvCardMessage"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="지금"
-                android:textColor="#99EBEBF5"
-                android:textSize="12sp"/>
+                android:text="메세지 내용이 여기에 표시됩니다"
+                android:textColor="#F0F0F5"
+                android:textSize="14sp"
+                android:lineSpacingMultiplier="1.25"
+                android:maxLines="4"
+                android:ellipsize="end"
+                android:layout_marginTop="3dp"/>
 
         </LinearLayout>
 
-        <!-- 메시지 본문 -->
-        <TextView
-            android:id="@+id/tvCardMessage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="메세지 내용이 여기에 표시됩니다"
-            android:textColor="#F2F2F7"
-            android:textSize="15sp"
-            android:lineSpacingMultiplier="1.2"
-            android:maxLines="4"
-            android:ellipsize="end"
-            android:layout_marginTop="5dp"/>
-
     </LinearLayout>
+
 </androidx.cardview.widget.CardView>

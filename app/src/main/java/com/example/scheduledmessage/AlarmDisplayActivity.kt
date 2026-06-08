@@ -158,13 +158,11 @@ class AlarmDisplayActivity : AppCompatActivity() {
         val roomName = intent.getStringExtra("room_name") ?: return
         val messageText = intent.getStringExtra("message_text") ?: return
         val roomIconUri = intent.getStringExtra("icon_uri")
-        val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
         cardAdapter.addCard(
             NotificationCard(
                 roomName = roomName,
                 messageText = messageText,
-                roomIconUri = roomIconUri,
-                time = timeStr
+                roomIconUri = roomIconUri
             )
         )
         binding.rvCards.scrollToPosition(0)
