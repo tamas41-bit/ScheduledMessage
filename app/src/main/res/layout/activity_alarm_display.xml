@@ -58,15 +58,16 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:tint="#FFFFFF"/>
 
-    <!-- 알림 카드 목록 (하단 고정) -->
+    <!-- 알림 카드 목록 (중상단, 새 카드가 위에서 슬라이드 인) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCards"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="72dp"
         android:paddingStart="14dp"
         android:paddingEnd="14dp"
-        android:paddingBottom="24dp"
+        android:paddingTop="4dp"
         android:clipToPadding="false"/>
 
 </FrameLayout>
