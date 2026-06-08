@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken
 
 object MessageStore {
     private const val PREF = "msg_store"
-    private const val KEY_BG = "background_uri"
     private val gson = Gson()
 
     private fun messagesKey(roomId: Int) = "messages_$roomId"
@@ -47,99 +46,75 @@ object MessageStore {
             .remove(messagesKey(roomId)).apply()
     }
 
-    fun getBackgroundUri(context: Context): String? {
-        return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getString(KEY_BG, null)
-    }
+    // ── 알림 화면 설정 (per-room) ──────────────────────────────────────
+    private fun p(context: Context) = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
 
-    fun saveBackgroundUri(context: Context, uri: String?) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putString(KEY_BG, uri).apply()
-    }
+    // 배경 이미지
+    fun saveNotifBgUri(context: Context, roomId: Int, uri: String?) =
+        p(context).edit().putString("notif_bg_$roomId", uri).apply()
 
-    // 시계 설정
-    private const val KEY_CLOCK_X = "clock_x_pct"
-    private const val KEY_CLOCK_Y = "clock_y_pct"
-    private const val KEY_CLOCK_SIZE = "clock_size_sp"
-    private const val KEY_CLOCK_FONT = "clock_font"
-    private const val KEY_CLOCK_CUSTOM_H = "clock_custom_hour"
-    private const val KEY_CLOCK_CUSTOM_M = "clock_custom_minute"
-    private const val KEY_CLOCK_USE_CUSTOM = "clock_use_custom"
-    private const val KEY_CLOCK_SHOW_DATE = "clock_show_date"
+    fun getNotifBgUri(context: Context, roomId: Int): String? =
+        p(context).getString("notif_bg_$roomId", null)
 
-    fun saveClockPosition(context: Context, xPct: Float, yPct: Float) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putFloat(KEY_CLOCK_X, xPct).putFloat(KEY_CLOCK_Y, yPct).apply()
-    }
+    // 시계 위치
+    fun saveClockPosition(context: Context, roomId: Int, xPct: Float, yPct: Float) =
+        p(context).edit().putFloat("clock_x_$roomId", xPct).putFloat("clock_y_$roomId", yPct).apply()
 
-    fun getClockXPct(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getFloat(KEY_CLOCK_X, 0.5f)
+    fun getClockXPct(context: Context, roomId: Int) =
+        p(context).getFloat("clock_x_$roomId", 0.5f)
 
-    fun getClockYPct(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getFloat(KEY_CLOCK_Y, 0.2f)
+    fun getClockYPct(context: Context, roomId: Int) =
+        p(context).getFloat("clock_y_$roomId", 0.2f)
 
-    fun saveClockSizeSp(context: Context, sp: Int) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CLOCK_SIZE, sp).apply()
-    }
+    // 시계 크기
+    fun saveClockSizeSp(context: Context, roomId: Int, sp: Int) =
+        p(context).edit().putInt("clock_size_$roomId", sp).apply()
 
-    fun getClockSizeSp(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_SIZE, 72)
+    fun getClockSizeSp(context: Context, roomId: Int) =
+        p(context).getInt("clock_size_$roomId", 72)
 
-    fun saveClockFont(context: Context, font: String) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putString(KEY_CLOCK_FONT, font).apply()
-    }
+    // 폰트
+    fun saveClockFont(context: Context, roomId: Int, font: String) =
+        p(context).edit().putString("clock_font_$roomId", font).apply()
 
-    fun getClockFont(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getString(KEY_CLOCK_FONT, "DEFAULT") ?: "DEFAULT"
+    fun getClockFont(context: Context, roomId: Int) =
+        p(context).getString("clock_font_$roomId", "기본체") ?: "기본체"
 
-    fun saveCustomTime(context: Context, useCustom: Boolean, hour: Int, minute: Int) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_CLOCK_USE_CUSTOM, useCustom)
-            .putInt(KEY_CLOCK_CUSTOM_H, hour)
-            .putInt(KEY_CLOCK_CUSTOM_M, minute)
+    // 커스텀 시간
+    fun saveCustomTime(context: Context, roomId: Int, useCustom: Boolean, hour: Int, minute: Int) =
+        p(context).edit()
+            .putBoolean("clock_use_custom_$roomId", useCustom)
+            .putInt("clock_custom_h_$roomId", hour)
+            .putInt("clock_custom_m_$roomId", minute)
             .apply()
-    }
 
-    fun getUseCustomTime(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean(KEY_CLOCK_USE_CUSTOM, false)
+    fun getUseCustomTime(context: Context, roomId: Int) =
+        p(context).getBoolean("clock_use_custom_$roomId", false)
 
-    fun getCustomHour(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_CUSTOM_H, 12)
+    fun getCustomHour(context: Context, roomId: Int) =
+        p(context).getInt("clock_custom_h_$roomId", 12)
 
-    fun getCustomMinute(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_CUSTOM_M, 0)
+    fun getCustomMinute(context: Context, roomId: Int) =
+        p(context).getInt("clock_custom_m_$roomId", 0)
 
-    fun saveShowDate(context: Context, show: Boolean) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_CLOCK_SHOW_DATE, show).apply()
-    }
+    // 날짜 표시
+    fun saveShowDate(context: Context, roomId: Int, show: Boolean) =
+        p(context).edit().putBoolean("clock_show_date_$roomId", show).apply()
 
-    fun getShowDate(context: Context) =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean(KEY_CLOCK_SHOW_DATE, true)
+    fun getShowDate(context: Context, roomId: Int) =
+        p(context).getBoolean("clock_show_date_$roomId", true)
 
     // 알림 카드 색상 / 투명도
-    private const val KEY_CARD_COLOR = "card_color"
-    private const val KEY_CARD_ALPHA = "card_alpha"
+    fun saveCardColor(context: Context, roomId: Int, color: String) =
+        p(context).edit().putString("card_color_$roomId", color).apply()
 
-    fun saveCardColor(context: Context, color: String) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putString(KEY_CARD_COLOR, color).apply()
-    }
+    fun getCardColor(context: Context, roomId: Int): String =
+        p(context).getString("card_color_$roomId", "#232323") ?: "#232323"
 
-    fun getCardColor(context: Context): String =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getString(KEY_CARD_COLOR, "#232323") ?: "#232323"
-
-    fun saveCardAlpha(context: Context, alpha: Int) {
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_CARD_ALPHA, alpha).apply()
-    }
+    fun saveCardAlpha(context: Context, roomId: Int, alpha: Int) =
+        p(context).edit().putInt("card_alpha_$roomId", alpha).apply()
 
     /** 0–255; 기본값 184 ≈ 72% */
-    fun getCardAlpha(context: Context): Int =
-        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getInt(KEY_CARD_ALPHA, 184)
+    fun getCardAlpha(context: Context, roomId: Int): Int =
+        p(context).getInt("card_alpha_$roomId", 184)
 }

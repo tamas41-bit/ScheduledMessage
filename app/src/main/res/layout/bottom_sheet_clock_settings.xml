@@ -219,6 +219,77 @@
                 android:backgroundTint="#232323"/>
         </LinearLayout>
 
+        <!-- 대표 색상 스와치 8개 -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View android:id="@+id/swatch1"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#232323"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch2"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#0D0D0D"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch3"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#0A1628"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch4"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#1A0A3C"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch5"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#0A2818"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch6"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#3C0A0A"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch7"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#0A2A2C"
+                    android:clickable="true" android:focusable="true"/>
+
+                <View android:id="@+id/swatch8"
+                    android:layout_width="32dp" android:layout_height="32dp"
+                    android:background="@drawable/bg_swatch_color"
+                    android:backgroundTint="#2E1A06"
+                    android:clickable="true" android:focusable="true"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
         <!-- R 슬라이더 -->
         <LinearLayout
             android:layout_width="match_parent"

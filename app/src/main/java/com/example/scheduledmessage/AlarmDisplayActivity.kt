@@ -22,31 +22,15 @@ class AlarmDisplayActivity : AppCompatActivity() {
     private lateinit var cardAdapter: NotificationCardAdapter
     private val clockHandler = Handler(Looper.getMainLooper())
     private var clockRunnable: Runnable? = null
+    private var roomId: Int = 0
 
     private val fontList: List<Pair<String, Typeface>> by lazy {
         listOf(
             "기본체" to Typeface.DEFAULT,
-            "굵은 기본체" to Typeface.DEFAULT_BOLD,
-            "모노스페이스" to Typeface.MONOSPACE,
-            "굵은 모노스페이스" to Typeface.create(Typeface.MONOSPACE, Typeface.BOLD),
             "세리프" to Typeface.SERIF,
-            "굵은 세리프" to Typeface.create(Typeface.SERIF, Typeface.BOLD),
-            "산스세리프" to Typeface.SANS_SERIF,
-            "굵은 산스세리프" to Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD),
-            "이탤릭" to Typeface.create(Typeface.DEFAULT, Typeface.ITALIC),
-            "굵은 이탤릭" to Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC),
             "세리프 이탤릭" to Typeface.create(Typeface.SERIF, Typeface.ITALIC),
-            "모노 이탤릭" to Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC),
-            "condensed" to Typeface.create("sans-serif-condensed", Typeface.NORMAL),
-            "condensed bold" to Typeface.create("sans-serif-condensed", Typeface.BOLD),
-            "light" to Typeface.create("sans-serif-light", Typeface.NORMAL),
-            "thin" to Typeface.create("sans-serif-thin", Typeface.NORMAL),
-            "medium" to Typeface.create("sans-serif-medium", Typeface.NORMAL),
-            "medium bold" to Typeface.create("sans-serif-medium", Typeface.BOLD),
-            "black" to Typeface.create("sans-serif-black", Typeface.NORMAL),
             "cursive" to Typeface.create("cursive", Typeface.NORMAL),
             "serif light" to Typeface.create("serif", Typeface.NORMAL),
-            "nanum gothic" to Typeface.create("NanumGothic", Typeface.NORMAL),
             "roboto" to Typeface.create("roboto", Typeface.NORMAL),
         )
     }
@@ -58,6 +42,7 @@ class AlarmDisplayActivity : AppCompatActivity() {
         hideSystemUI()
         supportActionBar?.hide()
 
+        roomId = intent.getIntExtra("room_id", 0)
         setupRecyclerView()
         loadBackground()
         applyClockSettings()
@@ -66,8 +51,8 @@ class AlarmDisplayActivity : AppCompatActivity() {
         // 저장된 시계 위치 복원
         binding.root.post {
             val parent = binding.root
-            val xPct = MessageStore.getClockXPct(this)
-            val yPct = MessageStore.getClockYPct(this)
+            val xPct = MessageStore.getClockXPct(this, roomId)
+            val yPct = MessageStore.getClockYPct(this, roomId)
             binding.layoutClock.x = xPct * parent.width - binding.layoutClock.width / 2f
             binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
         }
@@ -112,17 +97,17 @@ class AlarmDisplayActivity : AppCompatActivity() {
     private fun startClock() {
         clockRunnable = object : Runnable {
             override fun run() {
-                if (MessageStore.getUseCustomTime(this@AlarmDisplayActivity)) {
+                if (MessageStore.getUseCustomTime(this@AlarmDisplayActivity, roomId)) {
                     binding.tvTime.text = String.format(
                         "%02d:%02d",
-                        MessageStore.getCustomHour(this@AlarmDisplayActivity),
-                        MessageStore.getCustomMinute(this@AlarmDisplayActivity)
+                        MessageStore.getCustomHour(this@AlarmDisplayActivity, roomId),
+                        MessageStore.getCustomMinute(this@AlarmDisplayActivity, roomId)
                     )
                 } else {
                     binding.tvTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
                 }
                 binding.tvDate.text = SimpleDateFormat("M월 d일 EEEE", Locale("ko")).format(Date())
-                binding.tvDate.visibility = if (MessageStore.getShowDate(this@AlarmDisplayActivity)) View.VISIBLE else View.GONE
+                binding.tvDate.visibility = if (MessageStore.getShowDate(this@AlarmDisplayActivity, roomId)) View.VISIBLE else View.GONE
                 clockHandler.postDelayed(this, 1000)
             }
         }
@@ -130,22 +115,21 @@ class AlarmDisplayActivity : AppCompatActivity() {
     }
 
     private fun applyClockSettings() {
-        binding.tvTime.textSize = MessageStore.getClockSizeSp(this).toFloat()
-        val fontName = MessageStore.getClockFont(this)
+        binding.tvTime.textSize = MessageStore.getClockSizeSp(this, roomId).toFloat()
+        val fontName = MessageStore.getClockFont(this, roomId)
         fontList.find { it.first == fontName }?.let { binding.tvTime.typeface = it.second }
-        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this, roomId)) View.VISIBLE else View.GONE
     }
 
     private fun loadBackground() {
-        val savedBg = getSharedPreferences("notif_screen_prefs", MODE_PRIVATE)
-            .getString("bg_uri", null)
+        val savedBg = MessageStore.getNotifBgUri(this, roomId)
         if (savedBg != null) {
             Glide.with(this).load(savedBg).centerCrop().into(binding.ivBackground)
         }
     }
 
     private fun setupRecyclerView() {
-        cardAdapter = NotificationCardAdapter()
+        cardAdapter = NotificationCardAdapter(roomId)
         binding.rvCards.layoutManager = LinearLayoutManager(this)
         binding.rvCards.itemAnimator = NotificationCardAnimator()
         binding.rvCards.adapter = cardAdapter

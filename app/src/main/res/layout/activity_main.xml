@@ -39,21 +39,11 @@
             android:textSize="20sp"
             android:textStyle="bold"/>
 
-        <!-- 배경 이미지 미리보기 -->
-        <ImageView
-            android:id="@+id/ivBgPreview"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:scaleType="centerCrop"
-            android:background="#2A2A2A"
-            android:src="@drawable/ic_bg_placeholder"
-            android:layout_marginEnd="8dp"/>
-
         <Button
-            android:id="@+id/btnChangeBg"
+            android:id="@+id/btnNotifSettings"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:text="배경 변경"
+            android:text="알림 설정"
             android:textSize="12sp"
             android:backgroundTint="#3A3A3A"
             android:textColor="#FFFFFF"/>

@@ -36,9 +36,6 @@ class RoomsActivity : AppCompatActivity() {
         refreshList()
 
         binding.btnAddRoom.setOnClickListener { showAddRoomDialog() }
-        binding.btnOpenNotifScreen.setOnClickListener {
-            startActivity(Intent(this, NotificationScreenActivity::class.java))
-        }
     }
 
     override fun onResume() {

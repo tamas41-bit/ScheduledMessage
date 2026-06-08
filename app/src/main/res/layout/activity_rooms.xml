@@ -47,21 +47,9 @@
         android:paddingBottom="12dp">
 
         <Button
-            android:id="@+id/btnOpenNotifScreen"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_weight="1"
-            android:text="알림 화면"
-            android:textSize="15sp"
-            android:backgroundTint="#2A2A2A"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
             android:id="@+id/btnAddRoom"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_weight="1"
             android:text="+ 새 대화창"
             android:textSize="15sp"
             android:backgroundTint="#3A8AFF"

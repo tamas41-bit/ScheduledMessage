@@ -17,32 +17,16 @@ import java.util.Locale
 class PreviewActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPreviewBinding
+    private var roomId: Int = 0
 
     private val fontList: List<Pair<String, Typeface>> by lazy {
         listOf(
             "기본체" to Typeface.DEFAULT,
-            "굵은 기본체" to Typeface.DEFAULT_BOLD,
-            "모노스페이스" to Typeface.MONOSPACE,
-            "굵은 모노스페이스" to Typeface.create(Typeface.MONOSPACE, Typeface.BOLD),
             "세리프" to Typeface.SERIF,
-            "굵은 세리프" to Typeface.create(Typeface.SERIF, Typeface.BOLD),
-            "산스세리프" to Typeface.SANS_SERIF,
-            "굵은 산스세리프" to Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD),
-            "이탤릭" to Typeface.create(Typeface.DEFAULT, Typeface.ITALIC),
-            "굵은 이탤릭" to Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC),
             "세리프 이탤릭" to Typeface.create(Typeface.SERIF, Typeface.ITALIC),
-            "모노 이탤릭" to Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC),
-            "condensed" to Typeface.create("sans-serif-condensed", Typeface.NORMAL),
-            "condensed bold" to Typeface.create("sans-serif-condensed", Typeface.BOLD),
-            "light" to Typeface.create("sans-serif-light", Typeface.NORMAL),
-            "thin" to Typeface.create("sans-serif-thin", Typeface.NORMAL),
-            "medium" to Typeface.create("sans-serif-medium", Typeface.NORMAL),
-            "medium bold" to Typeface.create("sans-serif-medium", Typeface.BOLD),
-            "black" to Typeface.create("sans-serif-black", Typeface.NORMAL),
             "cursive" to Typeface.create("cursive", Typeface.NORMAL),
             "serif light" to Typeface.create("serif", Typeface.NORMAL),
-            "nanum gothic" to Typeface.create("NanumGothic", Typeface.NORMAL),
-            "roboto" to Typeface.create("roboto", Typeface.NORMAL)
+            "roboto" to Typeface.create("roboto", Typeface.NORMAL),
         )
     }
 
@@ -52,6 +36,7 @@ class PreviewActivity : AppCompatActivity() {
         setContentView(binding.root)
         hideSystemUI()
         supportActionBar?.hide()
+        roomId = intent.getIntExtra("room_id", 0)
 
         loadBackground()
         applyClock()
@@ -84,8 +69,7 @@ class PreviewActivity : AppCompatActivity() {
     }
 
     private fun loadBackground() {
-        val bgUri = getSharedPreferences("notif_screen_prefs", MODE_PRIVATE)
-            .getString("bg_uri", null)
+        val bgUri = MessageStore.getNotifBgUri(this, roomId)
         if (bgUri != null) {
             Glide.with(this).load(bgUri).centerCrop().into(binding.ivBackground)
         }
@@ -93,32 +77,32 @@ class PreviewActivity : AppCompatActivity() {
 
     private fun applyClock() {
         // 시간
-        binding.tvTime.text = if (MessageStore.getUseCustomTime(this)) {
+        binding.tvTime.text = if (MessageStore.getUseCustomTime(this, roomId)) {
             String.format("%02d:%02d",
-                MessageStore.getCustomHour(this),
-                MessageStore.getCustomMinute(this))
+                MessageStore.getCustomHour(this, roomId),
+                MessageStore.getCustomMinute(this, roomId))
         } else {
             SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
         }
         binding.tvDate.text = SimpleDateFormat("M월 d일 EEEE", Locale("ko")).format(Date())
-        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this, roomId)) View.VISIBLE else View.GONE
 
         // 크기 & 폰트
-        binding.tvTime.textSize = MessageStore.getClockSizeSp(this).toFloat()
-        val fontName = MessageStore.getClockFont(this)
+        binding.tvTime.textSize = MessageStore.getClockSizeSp(this, roomId).toFloat()
+        val fontName = MessageStore.getClockFont(this, roomId)
         fontList.find { it.first == fontName }?.let { binding.tvTime.typeface = it.second }
 
         // 저장된 위치 복원
         binding.root.post {
-            val xPct = MessageStore.getClockXPct(this)
-            val yPct = MessageStore.getClockYPct(this)
+            val xPct = MessageStore.getClockXPct(this, roomId)
+            val yPct = MessageStore.getClockYPct(this, roomId)
             binding.layoutClock.x = xPct * binding.root.width - binding.layoutClock.width / 2f
             binding.layoutClock.y = yPct * binding.root.height - binding.layoutClock.height / 2f
         }
     }
 
     private fun setupTestCard() {
-        val adapter = NotificationCardAdapter()
+        val adapter = NotificationCardAdapter(roomId)
         binding.rvCards.layoutManager = LinearLayoutManager(this)
         binding.rvCards.itemAnimator = null   // 미리보기에서는 애니메이션 없이 즉시 표시
         binding.rvCards.adapter = adapter

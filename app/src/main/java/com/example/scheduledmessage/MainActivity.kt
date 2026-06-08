@@ -18,7 +18,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ActivityMainBinding
 import java.util.Calendar
 
@@ -28,15 +27,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: MessageAdapter
     private var roomId: Int = 0
     private var roomName: String = "예약 메세지"
-
-    private val bgPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            MessageStore.saveBackgroundUri(this, it.toString())
-            loadBackground(it.toString())
-            Toast.makeText(this, "배경 이미지가 변경되었습니다", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private val profilePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -60,12 +50,15 @@ class MainActivity : AppCompatActivity() {
 
         requestPermissions()
         setupRecyclerView()
-        loadBackground(MessageStore.getBackgroundUri(this))
         loadRoomProfile()
         refreshList()
 
         binding.btnSend.setOnClickListener { sendMessage() }
-        binding.btnChangeBg.setOnClickListener { bgPickerLauncher.launch("image/*") }
+        binding.btnNotifSettings.setOnClickListener {
+            startActivity(Intent(this, NotificationScreenActivity::class.java).apply {
+                putExtra("room_id", roomId)
+            })
+        }
         binding.ivRoomProfile.setOnClickListener { profilePickerLauncher.launch("image/*") }
     }
 
@@ -164,12 +157,6 @@ class MainActivity : AppCompatActivity() {
         adapter.refresh(all)
         binding.tvEmpty.visibility =
             if (all.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
-    }
-
-    private fun loadBackground(uriString: String?) {
-        if (uriString != null) {
-            Glide.with(this).load(uriString).centerCrop().into(binding.ivBgPreview)
-        }
     }
 
     private fun loadRoomProfile() {

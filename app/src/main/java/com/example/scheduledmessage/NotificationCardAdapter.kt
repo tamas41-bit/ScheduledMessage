@@ -11,7 +11,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.example.scheduledmessage.databinding.ItemNotificationCardBinding
 
-class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>() {
+class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<NotificationCardAdapter.VH>() {
 
     private val items = mutableListOf<NotificationCard>()
 
@@ -30,8 +30,8 @@ class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>
 
         // 저장된 카드 색상 + 투명도 적용
         val ctx = holder.b.root.context
-        val hexColor = MessageStore.getCardColor(ctx)
-        val alpha = MessageStore.getCardAlpha(ctx)           // 0-255
+        val hexColor = MessageStore.getCardColor(ctx, roomId)
+        val alpha = MessageStore.getCardAlpha(ctx, roomId)   // 0-255
         val rgb = Color.parseColor(hexColor) and 0x00FFFFFF
         val argb = (alpha shl 24) or rgb
         holder.b.root.setCardBackgroundColor(argb)

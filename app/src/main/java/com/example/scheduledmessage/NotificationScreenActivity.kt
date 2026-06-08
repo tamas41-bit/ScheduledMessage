@@ -33,6 +33,7 @@ class NotificationScreenActivity : AppCompatActivity() {
     private lateinit var cardAdapter: NotificationCardAdapter
     private val clockHandler = Handler(Looper.getMainLooper())
     private var clockRunnable: Runnable? = null
+    private var roomId: Int = 0
 
     private var dX = 0f
     private var dY = 0f
@@ -45,27 +46,10 @@ class NotificationScreenActivity : AppCompatActivity() {
     private val fontList: List<FontItem> by lazy {
         listOf(
             FontItem("기본체", Typeface.DEFAULT),
-            FontItem("굵은 기본체", Typeface.DEFAULT_BOLD),
-            FontItem("모노스페이스", Typeface.MONOSPACE),
-            FontItem("굵은 모노스페이스", Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)),
             FontItem("세리프", Typeface.SERIF),
-            FontItem("굵은 세리프", Typeface.create(Typeface.SERIF, Typeface.BOLD)),
-            FontItem("산스세리프", Typeface.SANS_SERIF),
-            FontItem("굵은 산스세리프", Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)),
-            FontItem("이탤릭", Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)),
-            FontItem("굵은 이탤릭", Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)),
             FontItem("세리프 이탤릭", Typeface.create(Typeface.SERIF, Typeface.ITALIC)),
-            FontItem("모노 이탤릭", Typeface.create(Typeface.MONOSPACE, Typeface.ITALIC)),
-            FontItem("condensed", Typeface.create("sans-serif-condensed", Typeface.NORMAL)),
-            FontItem("condensed bold", Typeface.create("sans-serif-condensed", Typeface.BOLD)),
-            FontItem("light", Typeface.create("sans-serif-light", Typeface.NORMAL)),
-            FontItem("thin", Typeface.create("sans-serif-thin", Typeface.NORMAL)),
-            FontItem("medium", Typeface.create("sans-serif-medium", Typeface.NORMAL)),
-            FontItem("medium bold", Typeface.create("sans-serif-medium", Typeface.BOLD)),
-            FontItem("black", Typeface.create("sans-serif-black", Typeface.NORMAL)),
             FontItem("cursive", Typeface.create("cursive", Typeface.NORMAL)),
             FontItem("serif light", Typeface.create("serif", Typeface.NORMAL)),
-            FontItem("nanum gothic", Typeface.create("NanumGothic", Typeface.NORMAL)),
             FontItem("roboto", Typeface.create("roboto", Typeface.NORMAL)),
         )
     }
@@ -73,8 +57,7 @@ class NotificationScreenActivity : AppCompatActivity() {
     private val bgPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            getSharedPreferences("notif_screen_prefs", MODE_PRIVATE)
-                .edit().putString("bg_uri", it.toString()).apply()
+            MessageStore.saveNotifBgUri(this, roomId, it.toString())
             loadBackground(it.toString())
         }
     }
@@ -87,9 +70,10 @@ class NotificationScreenActivity : AppCompatActivity() {
 
         supportActionBar?.hide()
 
+        roomId = intent.getIntExtra("room_id", 0)
+
         setupRecyclerView()
-        val savedBg = getSharedPreferences("notif_screen_prefs", MODE_PRIVATE).getString("bg_uri", null)
-        loadBackground(savedBg)
+        loadBackground(MessageStore.getNotifBgUri(this, roomId))
 
         applyClockSettings()
         startClock()
@@ -99,8 +83,8 @@ class NotificationScreenActivity : AppCompatActivity() {
         // 시계 위치 복원 (레이아웃 완료 후 한 번만)
         binding.root.post {
             val parent = binding.root
-            val xPct = MessageStore.getClockXPct(this)
-            val yPct = MessageStore.getClockYPct(this)
+            val xPct = MessageStore.getClockXPct(this, roomId)
+            val yPct = MessageStore.getClockYPct(this, roomId)
             binding.layoutClock.x = xPct * parent.width - binding.layoutClock.width / 2f
             binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
         }
@@ -170,7 +154,7 @@ class NotificationScreenActivity : AppCompatActivity() {
                         val parent = binding.root
                         val cx = (view.x + view.width / 2f) / parent.width
                         val cy = (view.y + view.height / 2f) / parent.height
-                        MessageStore.saveClockPosition(this, cx, cy)
+                        MessageStore.saveClockPosition(this, roomId, cx, cy)
                     }
                     true
                 }
@@ -193,19 +177,19 @@ class NotificationScreenActivity : AppCompatActivity() {
         val rowTime = sheetView.findViewById<View>(R.id.rowTimeEdit)
 
         // 현재 값 채우기
-        switchShowDate.isChecked = MessageStore.getShowDate(this)
-        seekSize.progress = MessageStore.getClockSizeSp(this)
+        switchShowDate.isChecked = MessageStore.getShowDate(this, roomId)
+        seekSize.progress = MessageStore.getClockSizeSp(this, roomId)
         tvSizeLabel.text = "${seekSize.progress}sp"
-        tvCurrentFont.text = MessageStore.getClockFont(this).let { saved ->
+        tvCurrentFont.text = MessageStore.getClockFont(this, roomId).let { saved ->
             fontList.find { it.name == saved }?.name ?: "기본체"
         }
-        tvCurrentTime.text = if (MessageStore.getUseCustomTime(this))
-            String.format("%02d:%02d", MessageStore.getCustomHour(this), MessageStore.getCustomMinute(this))
+        tvCurrentTime.text = if (MessageStore.getUseCustomTime(this, roomId))
+            String.format("%02d:%02d", MessageStore.getCustomHour(this, roomId), MessageStore.getCustomMinute(this, roomId))
         else "실제 시간"
 
         // 날짜 표시 토글
         switchShowDate.setOnCheckedChangeListener { _, checked ->
-            MessageStore.saveShowDate(this, checked)
+            MessageStore.saveShowDate(this, roomId, checked)
             binding.tvDate.visibility = if (checked) View.VISIBLE else View.GONE
         }
 
@@ -217,7 +201,7 @@ class NotificationScreenActivity : AppCompatActivity() {
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {
-                MessageStore.saveClockSizeSp(this@NotificationScreenActivity, sb?.progress ?: 72)
+                MessageStore.saveClockSizeSp(this@NotificationScreenActivity, roomId, sb?.progress ?: 72)
             }
         })
 
@@ -246,7 +230,7 @@ class NotificationScreenActivity : AppCompatActivity() {
         val btnPreview = sheetView.findViewById<View>(R.id.btnPreview)
 
         // 저장된 색상 → R/G/B 분리
-        val savedColor = MessageStore.getCardColor(this)
+        val savedColor = MessageStore.getCardColor(this, roomId)
         val parsedColor = Color.parseColor(savedColor)
         var curR = Color.red(parsedColor)
         var curG = Color.green(parsedColor)
@@ -260,7 +244,7 @@ class NotificationScreenActivity : AppCompatActivity() {
             android.content.res.ColorStateList.valueOf(Color.rgb(curR, curG, curB))
 
         // 투명도 초기값
-        val savedAlpha = MessageStore.getCardAlpha(this)
+        val savedAlpha = MessageStore.getCardAlpha(this, roomId)
         val initPct = (savedAlpha * 100 / 255).coerceIn(10, 100)
         seekAlpha.progress = initPct
         tvAlphaLbl.text = "$initPct%"
@@ -273,7 +257,7 @@ class NotificationScreenActivity : AppCompatActivity() {
             val hex = String.format("#%02X%02X%02X", curR, curG, curB)
             colorPreview.backgroundTintList =
                 android.content.res.ColorStateList.valueOf(Color.rgb(curR, curG, curB))
-            MessageStore.saveCardColor(this, hex)
+            MessageStore.saveCardColor(this, roomId, hex)
             cardAdapter.notifyDataSetChanged()
         }
 
@@ -297,7 +281,7 @@ class NotificationScreenActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(sb: SeekBar?) {
                 val pct = sb?.progress ?: 72
                 val alpha255 = (pct * 255 / 100).coerceIn(0, 255)
-                MessageStore.saveCardAlpha(this@NotificationScreenActivity, alpha255)
+                MessageStore.saveCardAlpha(this@NotificationScreenActivity, roomId, alpha255)
                 cardAdapter.notifyDataSetChanged()
             }
         })
@@ -305,8 +289,24 @@ class NotificationScreenActivity : AppCompatActivity() {
         // 미리보기 버튼
         btnPreview.setOnClickListener {
             sheet.dismiss()
-            startActivity(Intent(this, PreviewActivity::class.java))
+            startActivity(Intent(this, PreviewActivity::class.java).apply {
+                putExtra("room_id", roomId)
+            })
         }
+
+        // 대표 색상 스와치 (클릭 시 RGB 슬라이더 업데이트)
+        fun applySwatch(r: Int, g: Int, b: Int) {
+            seekR.progress = r; seekG.progress = g; seekB.progress = b
+            onColorChanged()
+        }
+        sheetView.findViewById<View>(R.id.swatch1).setOnClickListener { applySwatch( 35,  35,  35) } // 다크 그레이
+        sheetView.findViewById<View>(R.id.swatch2).setOnClickListener { applySwatch( 13,  13,  13) } // 블랙
+        sheetView.findViewById<View>(R.id.swatch3).setOnClickListener { applySwatch( 10,  22,  40) } // 네이비
+        sheetView.findViewById<View>(R.id.swatch4).setOnClickListener { applySwatch( 26,  10,  60) } // 인디고
+        sheetView.findViewById<View>(R.id.swatch5).setOnClickListener { applySwatch( 10,  40,  24) } // 다크 그린
+        sheetView.findViewById<View>(R.id.swatch6).setOnClickListener { applySwatch( 60,  10,  10) } // 다크 레드
+        sheetView.findViewById<View>(R.id.swatch7).setOnClickListener { applySwatch( 10,  42,  44) } // 다크 틸
+        sheetView.findViewById<View>(R.id.swatch8).setOnClickListener { applySwatch( 46,  26,   6) } // 다크 브라운
 
         sheet.show()
     }
@@ -322,21 +322,21 @@ class NotificationScreenActivity : AppCompatActivity() {
     }
 
     private fun updateClock() {
-        if (MessageStore.getUseCustomTime(this)) {
+        if (MessageStore.getUseCustomTime(this, roomId)) {
             binding.tvTime.text = String.format("%02d:%02d",
-                MessageStore.getCustomHour(this), MessageStore.getCustomMinute(this))
+                MessageStore.getCustomHour(this, roomId), MessageStore.getCustomMinute(this, roomId))
         } else {
             binding.tvTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
         }
         binding.tvDate.text = SimpleDateFormat("M월 d일 EEEE", Locale("ko")).format(Date())
-        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this, roomId)) View.VISIBLE else View.GONE
     }
 
     private fun applyClockSettings() {
-        binding.tvTime.textSize = MessageStore.getClockSizeSp(this).toFloat()
-        val fontName = MessageStore.getClockFont(this)
+        binding.tvTime.textSize = MessageStore.getClockSizeSp(this, roomId).toFloat()
+        val fontName = MessageStore.getClockFont(this, roomId)
         fontList.find { it.name == fontName }?.let { binding.tvTime.typeface = it.typeface }
-        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this, roomId)) View.VISIBLE else View.GONE
     }
 
     private fun handleNotificationIntent(intent: Intent) {
@@ -353,7 +353,7 @@ class NotificationScreenActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        cardAdapter = NotificationCardAdapter()
+        cardAdapter = NotificationCardAdapter(roomId)
         binding.rvCards.layoutManager = LinearLayoutManager(this)
         binding.rvCards.itemAnimator = NotificationCardAnimator()
         binding.rvCards.adapter = cardAdapter
@@ -374,8 +374,8 @@ class NotificationScreenActivity : AppCompatActivity() {
         }
         val pickerH = NumberPicker(this).apply {
             minValue = 0; maxValue = 23
-            value = if (MessageStore.getUseCustomTime(this@NotificationScreenActivity))
-                MessageStore.getCustomHour(this@NotificationScreenActivity)
+            value = if (MessageStore.getUseCustomTime(this@NotificationScreenActivity, roomId))
+                MessageStore.getCustomHour(this@NotificationScreenActivity, roomId)
             else java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             setFormatter { v -> String.format("%02d", v) }
         }
@@ -385,8 +385,8 @@ class NotificationScreenActivity : AppCompatActivity() {
         }
         val pickerM = NumberPicker(this).apply {
             minValue = 0; maxValue = 59
-            value = if (MessageStore.getUseCustomTime(this@NotificationScreenActivity))
-                MessageStore.getCustomMinute(this@NotificationScreenActivity)
+            value = if (MessageStore.getUseCustomTime(this@NotificationScreenActivity, roomId))
+                MessageStore.getCustomMinute(this@NotificationScreenActivity, roomId)
             else java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE)
             setFormatter { v -> String.format("%02d", v) }
         }
@@ -406,11 +406,11 @@ class NotificationScreenActivity : AppCompatActivity() {
             .setTitle("시간 설정")
             .setView(container)
             .setPositiveButton("저장") { _, _ ->
-                MessageStore.saveCustomTime(this, true, pickerH.value, pickerM.value)
+                MessageStore.saveCustomTime(this, roomId, true, pickerH.value, pickerM.value)
                 updateClock()
             }
             .setNeutralButton("실제 시간 사용") { _, _ ->
-                MessageStore.saveCustomTime(this, false, 0, 0)
+                MessageStore.saveCustomTime(this, roomId, false, 0, 0)
                 updateClock()
             }
             .setNegativeButton("취소", null)
@@ -419,12 +419,12 @@ class NotificationScreenActivity : AppCompatActivity() {
 
     private fun showFontDialog() {
         val names = fontList.map { it.name }.toTypedArray()
-        val currentIdx = fontList.indexOfFirst { it.name == MessageStore.getClockFont(this) }.coerceAtLeast(0)
+        val currentIdx = fontList.indexOfFirst { it.name == MessageStore.getClockFont(this, roomId) }.coerceAtLeast(0)
         AlertDialog.Builder(this)
             .setTitle("폰트 선택")
             .setSingleChoiceItems(names, currentIdx) { dialog, which ->
                 binding.tvTime.typeface = fontList[which].typeface
-                MessageStore.saveClockFont(this, fontList[which].name)
+                MessageStore.saveClockFont(this, roomId, fontList[which].name)
                 dialog.dismiss()
             }
             .setNegativeButton("취소", null)
