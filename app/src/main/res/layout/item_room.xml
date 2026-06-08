@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?attr/selectableItemBackground"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/bg_icon_circle"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/tvRoomName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btnRename"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="이름변경"
+        android:textSize="12sp"
+        android:paddingHorizontal="10dp"
+        android:backgroundTint="#444444"
+        android:textColor="#FFFFFF"
+        android:layout_marginEnd="6dp" />
+
+    <Button
+        android:id="@+id/btnDeleteRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="삭제"
+        android:textSize="12sp"
+        android:paddingHorizontal="10dp"
+        android:backgroundTint="#CC3333"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>

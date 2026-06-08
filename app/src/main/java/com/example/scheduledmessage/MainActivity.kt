@@ -20,11 +20,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ActivityMainBinding
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: MessageAdapter
+    private var roomId: Int = 0
+    private var roomName: String = "예약 메세지"
 
     private val bgPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -40,18 +43,18 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        roomId = intent.getIntExtra("room_id", 0)
+        roomName = intent.getStringExtra("room_name") ?: "예약 메세지"
+        supportActionBar?.title = roomName
+        binding.tvRoomTitle.text = roomName
+
         requestPermissions()
         setupRecyclerView()
         loadBackground(MessageStore.getBackgroundUri(this))
         refreshList()
 
-        // 전송 버튼
         binding.btnSend.setOnClickListener { sendMessage() }
-
-        // 배경 변경
-        binding.btnChangeBg.setOnClickListener {
-            bgPickerLauncher.launch("image/*")
-        }
+        binding.btnChangeBg.setOnClickListener { bgPickerLauncher.launch("image/*") }
     }
 
     override fun onResume() {
@@ -63,65 +66,77 @@ class MainActivity : AppCompatActivity() {
         val text = binding.etInput.text.toString().trim()
         if (text.isEmpty()) return
 
+        // 기본 알림 시간 = 지금 + 5분
+        val cal = Calendar.getInstance().apply { add(Calendar.MINUTE, 5) }
+
         val msg = ScheduledMessage(
-            id = MessageStore.nextId(this),
+            id = MessageStore.nextId(this, roomId),
             text = text,
-            hour = -1  // 시간 미설정 상태로 추가
+            hour = cal.get(Calendar.HOUR_OF_DAY),
+            minute = cal.get(Calendar.MINUTE),
+            second = cal.get(Calendar.SECOND)
         )
-        MessageStore.add(this, msg)
+        MessageStore.add(this, roomId, msg)
+        AlarmScheduler.schedule(this, msg)
         binding.etInput.setText("")
         refreshList()
-
-        // 스크롤 최하단으로
-        binding.rvMessages.scrollToPosition(MessageStore.getAll(this).size - 1)
+        binding.rvMessages.scrollToPosition(MessageStore.getAll(this, roomId).size - 1)
     }
 
     private fun setupRecyclerView() {
         adapter = MessageAdapter(
-            MessageStore.getAll(this).toMutableList(),
+            MessageStore.getAll(this, roomId).toMutableList(),
             onEdit = { msg -> showEditTimeDialog(msg) },
             onDelete = { msg ->
                 AlarmScheduler.cancel(this, msg.id)
-                MessageStore.remove(this, msg.id)
+                MessageStore.remove(this, roomId, msg.id)
                 refreshList()
             }
         )
         binding.rvMessages.layoutManager = LinearLayoutManager(this).apply {
-            stackFromEnd = true  // 최신 메세지가 아래에
+            stackFromEnd = true
         }
         binding.rvMessages.adapter = adapter
     }
 
     private fun showEditTimeDialog(msg: ScheduledMessage) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
-        val etTime = view.findViewById<EditText>(R.id.etTime)
+        val etHour = view.findViewById<EditText>(R.id.etHour)
+        val etMinute = view.findViewById<EditText>(R.id.etMinute)
+        val etSecond = view.findViewById<EditText>(R.id.etSecond)
         val switchRepeat = view.findViewById<Switch>(R.id.switchRepeat)
         val tvTitle = view.findViewById<TextView>(R.id.tvDialogTitle)
 
         tvTitle.text = "\"${msg.text.take(20)}${if (msg.text.length > 20) "…" else ""}\""
-        if (msg.hour >= 0) {
-            etTime.setText("${msg.hour.toString().padStart(2,'0')}:${msg.minute.toString().padStart(2,'0')}:${msg.second.toString().padStart(2,'0')}")
-        }
+
+        val h = if (msg.hour >= 0) msg.hour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val m = if (msg.hour >= 0) msg.minute else Calendar.getInstance().also { it.add(Calendar.MINUTE, 5) }.get(Calendar.MINUTE)
+        val s = if (msg.hour >= 0) msg.second else 0
+
+        etHour.setText(h.toString())
+        etMinute.setText(m.toString())
+        etSecond.setText(s.toString())
         switchRepeat.isChecked = msg.isRepeating
 
         AlertDialog.Builder(this)
             .setTitle("알림 시간 설정")
             .setView(view)
             .setPositiveButton("저장") { _, _ ->
-                val timeText = etTime.text.toString().trim()
-                val parsed = parseTime(timeText)
-                if (parsed == null) {
-                    Toast.makeText(this, "시간 형식: HH:MM:SS (예: 08:30:00)", Toast.LENGTH_LONG).show()
+                val hour = etHour.text.toString().toIntOrNull()
+                val minute = etMinute.text.toString().toIntOrNull()
+                val second = etSecond.text.toString().toIntOrNull() ?: 0
+                if (hour == null || hour !in 0..23 || minute == null || minute !in 0..59 || second !in 0..59) {
+                    Toast.makeText(this, "올바른 시간을 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 val updated = msg.copy(
-                    hour = parsed.first,
-                    minute = parsed.second,
-                    second = parsed.third,
+                    hour = hour,
+                    minute = minute,
+                    second = second,
                     isRepeating = switchRepeat.isChecked,
                     isEnabled = true
                 )
-                MessageStore.update(this, updated)
+                MessageStore.update(this, roomId, updated)
                 AlarmScheduler.cancel(this, msg.id)
                 AlarmScheduler.schedule(this, updated)
                 refreshList()
@@ -131,22 +146,8 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    // "HH:MM:SS" 또는 "HH:MM" 파싱
-    private fun parseTime(input: String): Triple<Int, Int, Int>? {
-        return try {
-            val parts = input.split(":")
-            val h = parts[0].trim().toInt()
-            val m = parts[1].trim().toInt()
-            val s = if (parts.size >= 3) parts[2].trim().toInt() else 0
-            if (h !in 0..23 || m !in 0..59 || s !in 0..59) null
-            else Triple(h, m, s)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     private fun refreshList() {
-        val all = MessageStore.getAll(this)
+        val all = MessageStore.getAll(this, roomId)
         adapter.refresh(all)
         binding.tvEmpty.visibility =
             if (all.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1E1E1E">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="대화창 목록"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRooms"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="대화창이 없습니다.&#10;아래 + 버튼을 눌러 만들어보세요"
+            android:textColor="#888888"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/btnAddRoom"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="+ 새 대화창"
+        android:textSize="16sp"
+        android:backgroundTint="#3A8AFF"
+        android:textColor="#FFFFFF"
+        android:layout_margin="12dp" />
+
+</LinearLayout>
