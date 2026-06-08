@@ -25,7 +25,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val iconUri = room?.iconUri
 
         // 알림 화면으로 이동 (앱이 포그라운드에 있을 때만 동작)
-        val overlayIntent = Intent(context, NotificationScreenActivity::class.java).apply {
+        val overlayIntent = Intent(context, AlarmDisplayActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("message_id", msgId)
             putExtra("message_text", msgText)

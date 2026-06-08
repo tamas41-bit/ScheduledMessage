@@ -39,6 +39,15 @@
             android:turnScreenOn="true"/>
 
         <activity
+            android:name=".AlarmDisplayActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.NotificationScreen"/>
+
+        <activity
             android:name=".NotificationScreenActivity"
             android:exported="false"
             android:launchMode="singleTop"

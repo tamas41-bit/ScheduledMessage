@@ -109,6 +109,15 @@ class NotificationScreenActivity : AppCompatActivity() {
             }
         }
 
+        // 시계 위치 복원 (레이아웃 완료 후 한 번만)
+        binding.root.post {
+            val parent = binding.root
+            val xPct = MessageStore.getClockXPct(this)
+            val yPct = MessageStore.getClockYPct(this)
+            binding.layoutClock.x = xPct * parent.width - binding.layoutClock.width / 2f
+            binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
+        }
+
         binding.btnBack.setOnClickListener { finish() }
         binding.btnChangeBg.setOnClickListener { bgPickerLauncher.launch("image/*") }
         binding.btnEditClock.setOnClickListener { showTimeDialog() }
@@ -121,13 +130,6 @@ class NotificationScreenActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) hideSystemUI()
-        binding.root.post {
-            val parent = binding.root
-            val xPct = MessageStore.getClockXPct(this)
-            val yPct = MessageStore.getClockYPct(this)
-            binding.layoutClock.x = xPct * parent.width - binding.layoutClock.width / 2f
-            binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
-        }
     }
 
     override fun onNewIntent(intent: Intent) {
