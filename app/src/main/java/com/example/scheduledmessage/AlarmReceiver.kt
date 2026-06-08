@@ -24,9 +24,9 @@ class AlarmReceiver : BroadcastReceiver() {
         val room = RoomStore.getAll(context).find { it.id == roomId }
         val iconUri = room?.iconUri
 
-        // OverlayActivity 실행 (앱이 포그라운드에 있을 때만 동작)
-        val overlayIntent = Intent(context, OverlayActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        // 알림 화면으로 이동 (앱이 포그라운드에 있을 때만 동작)
+        val overlayIntent = Intent(context, NotificationScreenActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("message_id", msgId)
             putExtra("message_text", msgText)
             putExtra("room_name", room?.name ?: "예약 메세지")

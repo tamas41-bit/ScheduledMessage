@@ -35,6 +35,11 @@
             android:exported="false"
             android:theme="@style/Theme.Overlay"/>
 
+        <activity
+            android:name=".NotificationScreenActivity"
+            android:exported="false"
+            android:launchMode="singleTop"/>
+
         <receiver
             android:name=".AlarmReceiver"
             android:exported="true">
