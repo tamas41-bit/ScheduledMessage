@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             second = cal.get(Calendar.SECOND)
         )
         MessageStore.add(this, roomId, msg)
-        AlarmScheduler.schedule(this, msg)
+        AlarmScheduler.schedule(this, msg, roomId)
         binding.etInput.setText("")
         refreshList()
         binding.rvMessages.scrollToPosition(MessageStore.getAll(this, roomId).size - 1)
@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 MessageStore.update(this, roomId, updated)
                 AlarmScheduler.cancel(this, msg.id)
-                AlarmScheduler.schedule(this, updated)
+                AlarmScheduler.schedule(this, updated, roomId)
                 refreshList()
                 Toast.makeText(this, "알림이 설정되었습니다", Toast.LENGTH_SHORT).show()
             }

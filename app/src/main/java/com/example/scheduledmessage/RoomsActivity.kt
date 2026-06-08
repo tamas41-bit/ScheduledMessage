@@ -2,9 +2,11 @@ package com.example.scheduledmessage
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scheduledmessage.databinding.ActivityRoomsBinding
@@ -13,6 +15,17 @@ class RoomsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRoomsBinding
     private lateinit var adapter: RoomAdapter
+    private var pendingIconRoomId: Int = -1
+
+    private val iconPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val room = RoomStore.getAll(this).find { r -> r.id == pendingIconRoomId } ?: return@let
+            RoomStore.update(this, room.copy(iconUri = it.toString()))
+            refreshList()
+            Toast.makeText(this, "아이콘이 변경되었습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +52,10 @@ class RoomsActivity : AppCompatActivity() {
                     putExtra("room_name", room.name)
                 }
                 startActivity(intent)
+            },
+            onIconClick = { room ->
+                pendingIconRoomId = room.id
+                iconPickerLauncher.launch("image/*")
             },
             onRename = { room -> showRenameDialog(room) },
             onDelete = { room -> showDeleteDialog(room) }
@@ -93,10 +110,7 @@ class RoomsActivity : AppCompatActivity() {
             .setTitle("대화창 삭제")
             .setMessage("\"${room.name}\" 대화창과 모든 예약 메세지를 삭제할까요?")
             .setPositiveButton("삭제") { _, _ ->
-                // 해당 방의 알람 전부 취소
-                MessageStore.getAll(this, room.id).forEach {
-                    AlarmScheduler.cancel(this, it.id)
-                }
+                MessageStore.getAll(this, room.id).forEach { AlarmScheduler.cancel(this, it.id) }
                 MessageStore.removeAll(this, room.id)
                 RoomStore.remove(this, room.id)
                 refreshList()

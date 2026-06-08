@@ -9,12 +9,13 @@ import java.util.Calendar
 
 object AlarmScheduler {
 
-    fun schedule(context: Context, msg: ScheduledMessage) {
-        if (msg.hour < 0) return  // 시간 미설정 메세지는 스케줄 안함
+    fun schedule(context: Context, msg: ScheduledMessage, roomId: Int = 0) {
+        if (msg.hour < 0) return
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("message_id", msg.id)
             putExtra("message_text", msg.text)
+            putExtra("room_id", roomId)
         }
         val pi = PendingIntent.getBroadcast(
             context, msg.id, intent,
