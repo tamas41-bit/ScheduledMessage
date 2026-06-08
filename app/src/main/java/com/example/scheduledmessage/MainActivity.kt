@@ -38,6 +38,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val profilePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            val room = RoomStore.getAll(this).find { r -> r.id == roomId } ?: return@let
+            RoomStore.update(this, room.copy(iconUri = it.toString()))
+            loadRoomProfile()
+            Toast.makeText(this, "프로필 이미지가 변경되었습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -51,14 +61,17 @@ class MainActivity : AppCompatActivity() {
         requestPermissions()
         setupRecyclerView()
         loadBackground(MessageStore.getBackgroundUri(this))
+        loadRoomProfile()
         refreshList()
 
         binding.btnSend.setOnClickListener { sendMessage() }
         binding.btnChangeBg.setOnClickListener { bgPickerLauncher.launch("image/*") }
+        binding.ivRoomProfile.setOnClickListener { profilePickerLauncher.launch("image/*") }
     }
 
     override fun onResume() {
         super.onResume()
+        loadRoomProfile()
         refreshList()
     }
 
@@ -156,6 +169,19 @@ class MainActivity : AppCompatActivity() {
     private fun loadBackground(uriString: String?) {
         if (uriString != null) {
             Glide.with(this).load(uriString).centerCrop().into(binding.ivBgPreview)
+        }
+    }
+
+    private fun loadRoomProfile() {
+        val room = RoomStore.getAll(this).find { it.id == roomId }
+        val iconUri = room?.iconUri
+        if (iconUri != null) {
+            Glide.with(this)
+                .load(Uri.parse(iconUri))
+                .circleCrop()
+                .into(binding.ivRoomProfile)
+        } else {
+            binding.ivRoomProfile.setImageResource(android.R.drawable.ic_menu_camera)
         }
     }
 

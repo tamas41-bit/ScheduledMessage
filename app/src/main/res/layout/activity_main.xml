@@ -16,6 +16,19 @@
         android:gravity="center_vertical"
         android:background="#1A1A1A">
 
+        <!-- 프로필 이미지 (탭하면 변경) -->
+        <ImageView
+            android:id="@+id/ivRoomProfile"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginEnd="12dp"
+            android:src="@android:drawable/ic_menu_camera"
+            android:scaleType="centerCrop"
+            android:background="@drawable/bg_icon_circle"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"/>
+
         <TextView
             android:id="@+id/tvRoomTitle"
             android:layout_width="0dp"
