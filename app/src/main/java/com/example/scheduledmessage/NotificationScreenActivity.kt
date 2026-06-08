@@ -281,7 +281,7 @@ class NotificationScreenActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         cardAdapter = NotificationCardAdapter()
         binding.rvCards.layoutManager = LinearLayoutManager(this)
-        binding.rvCards.itemAnimator = SlideInTopAnimator()
+        binding.rvCards.itemAnimator = NotificationCardAnimator()
         binding.rvCards.adapter = cardAdapter
         cardAdapter.attachSwipeToDismiss(binding.rvCards)
     }
