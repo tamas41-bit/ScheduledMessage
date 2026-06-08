@@ -47,16 +47,6 @@
 
     </LinearLayout>
 
-    <!-- 닫기 버튼 (우상단) -->
-    <ImageButton
-        android:id="@+id/btnClose"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="top|end"
-        android:layout_margin="12dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:tint="#FFFFFF"/>
 
     <!-- 알림 카드 목록 (중상단, 새 카드가 위에서 슬라이드 인) -->
     <androidx.recyclerview.widget.RecyclerView

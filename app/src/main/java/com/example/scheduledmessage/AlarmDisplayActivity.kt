@@ -72,8 +72,6 @@ class AlarmDisplayActivity : AppCompatActivity() {
             binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
         }
 
-        binding.btnClose.setOnClickListener { finish() }
-
         handleIntent()
     }
 

@@ -33,7 +33,7 @@ class NotificationCardAnimator : DefaultItemAnimator() {
 
         dispatchAddStarting(holder)
 
-        // 1단계: 빠르게 1.05 배로 확장하며 페이드인 + Y 안착
+        // 1단계: 1.05 배로 확장하며 페이드인 + Y 안착
         view.animate()
             .alpha(1f)
             .scaleX(1.05f)
