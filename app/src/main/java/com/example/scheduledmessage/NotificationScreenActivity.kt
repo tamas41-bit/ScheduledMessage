@@ -13,6 +13,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.NumberPicker
 import android.widget.SeekBar
+import android.widget.Switch
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -20,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ActivityNotificationScreenBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,6 +35,9 @@ class NotificationScreenActivity : AppCompatActivity() {
 
     private var dX = 0f
     private var dY = 0f
+    private var downRawX = 0f
+    private var downRawY = 0f
+    private val TAP_THRESHOLD_DP = 8f
 
     data class FontItem(val name: String, val typeface: Typeface)
 
@@ -88,29 +93,7 @@ class NotificationScreenActivity : AppCompatActivity() {
         applyClockSettings()
         startClock()
 
-        // 시계 드래그
-        binding.layoutClock.setOnTouchListener { view, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    dX = view.x - event.rawX
-                    dY = view.y - event.rawY
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    view.animate().x(event.rawX + dX).y(event.rawY + dY).setDuration(0).start()
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    val parent = binding.root
-                    // 중심 좌표 기준으로 저장
-                    val cx = (view.x + view.width / 2f) / parent.width
-                    val cy = (view.y + view.height / 2f) / parent.height
-                    MessageStore.saveClockPosition(this, cx, cy)
-                    true
-                }
-                else -> false
-            }
-        }
+        setupClockTouch()
 
         // 시계 위치 복원 (레이아웃 완료 후 한 번만)
         binding.root.post {
@@ -123,9 +106,6 @@ class NotificationScreenActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
         binding.btnChangeBg.setOnClickListener { bgPickerLauncher.launch("image/*") }
-        binding.btnEditClock.setOnClickListener { showTimeDialog() }
-        binding.btnFontSelect.setOnClickListener { showFontDialog() }
-        binding.btnClockSize.setOnClickListener { showSizeDialog() }
 
         handleNotificationIntent(intent)
     }
@@ -163,6 +143,98 @@ class NotificationScreenActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupClockTouch() {
+        val tapThresholdPx = TAP_THRESHOLD_DP * resources.displayMetrics.density
+        binding.layoutClock.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    dX = view.x - event.rawX
+                    dY = view.y - event.rawY
+                    downRawX = event.rawX
+                    downRawY = event.rawY
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    view.animate().x(event.rawX + dX).y(event.rawY + dY).setDuration(0).start()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    val movedX = Math.abs(event.rawX - downRawX)
+                    val movedY = Math.abs(event.rawY - downRawY)
+                    if (movedX < tapThresholdPx && movedY < tapThresholdPx) {
+                        // 탭 → 설정 바텀시트
+                        showClockSettingsBottomSheet()
+                    } else {
+                        // 드래그 → 위치 저장 (중심 좌표 기준)
+                        val parent = binding.root
+                        val cx = (view.x + view.width / 2f) / parent.width
+                        val cy = (view.y + view.height / 2f) / parent.height
+                        MessageStore.saveClockPosition(this, cx, cy)
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun showClockSettingsBottomSheet() {
+        val sheet = BottomSheetDialog(this)
+        val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_clock_settings, null)
+        sheet.setContentView(sheetView)
+
+        val switchShowDate = sheetView.findViewById<Switch>(R.id.switchShowDate)
+        val seekSize = sheetView.findViewById<SeekBar>(R.id.seekClockSize)
+        val tvSizeLabel = sheetView.findViewById<TextView>(R.id.tvSizeLabel)
+        val tvCurrentFont = sheetView.findViewById<TextView>(R.id.tvCurrentFont)
+        val tvCurrentTime = sheetView.findViewById<TextView>(R.id.tvCurrentTime)
+        val rowFont = sheetView.findViewById<View>(R.id.rowFontSelect)
+        val rowTime = sheetView.findViewById<View>(R.id.rowTimeEdit)
+
+        // 현재 값 채우기
+        switchShowDate.isChecked = MessageStore.getShowDate(this)
+        seekSize.progress = MessageStore.getClockSizeSp(this)
+        tvSizeLabel.text = "${seekSize.progress}sp"
+        tvCurrentFont.text = MessageStore.getClockFont(this).let { saved ->
+            fontList.find { it.name == saved }?.name ?: "기본체"
+        }
+        tvCurrentTime.text = if (MessageStore.getUseCustomTime(this))
+            String.format("%02d:%02d", MessageStore.getCustomHour(this), MessageStore.getCustomMinute(this))
+        else "실제 시간"
+
+        // 날짜 표시 토글
+        switchShowDate.setOnCheckedChangeListener { _, checked ->
+            MessageStore.saveShowDate(this, checked)
+            binding.tvDate.visibility = if (checked) View.VISIBLE else View.GONE
+        }
+
+        // 크기 슬라이더
+        seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                tvSizeLabel.text = "${p}sp"
+                binding.tvTime.textSize = p.toFloat()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                MessageStore.saveClockSizeSp(this@NotificationScreenActivity, sb?.progress ?: 72)
+            }
+        })
+
+        // 폰트 선택
+        rowFont.setOnClickListener {
+            sheet.dismiss()
+            showFontDialog()
+        }
+
+        // 시간 설정
+        rowTime.setOnClickListener {
+            sheet.dismiss()
+            showTimeDialog()
+        }
+
+        sheet.show()
+    }
+
     private fun startClock() {
         clockRunnable = object : Runnable {
             override fun run() {
@@ -181,12 +253,14 @@ class NotificationScreenActivity : AppCompatActivity() {
             binding.tvTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
         }
         binding.tvDate.text = SimpleDateFormat("M월 d일 EEEE", Locale("ko")).format(Date())
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
     }
 
     private fun applyClockSettings() {
         binding.tvTime.textSize = MessageStore.getClockSizeSp(this).toFloat()
         val fontName = MessageStore.getClockFont(this)
         fontList.find { it.name == fontName }?.let { binding.tvTime.typeface = it.typeface }
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
     }
 
     private fun handleNotificationIntent(intent: Intent) {
@@ -254,7 +328,7 @@ class NotificationScreenActivity : AppCompatActivity() {
         container.addView(pickerLayout)
 
         AlertDialog.Builder(this)
-            .setTitle("시계 시간 설정")
+            .setTitle("시간 설정")
             .setView(container)
             .setPositiveButton("저장") { _, _ ->
                 MessageStore.saveCustomTime(this, true, pickerH.value, pickerM.value)
@@ -279,45 +353,6 @@ class NotificationScreenActivity : AppCompatActivity() {
                 dialog.dismiss()
             }
             .setNegativeButton("취소", null)
-            .show()
-    }
-
-    private fun showSizeDialog() {
-        val currentSize = MessageStore.getClockSizeSp(this)
-        val container = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 32, 48, 16)
-        }
-        val tvPreview = TextView(this).apply {
-            text = binding.tvTime.text; textSize = currentSize.toFloat()
-            typeface = binding.tvTime.typeface
-            setTextColor(android.graphics.Color.WHITE)
-            gravity = android.view.Gravity.CENTER; setPadding(0, 0, 0, 16)
-        }
-        val tvLabel = TextView(this).apply {
-            text = "크기: ${currentSize}sp"; textSize = 14f
-            setTextColor(0xFFCCCCCC.toInt()); gravity = android.view.Gravity.CENTER
-        }
-        val seekBar = SeekBar(this).apply { min = 24; max = 150; progress = currentSize }
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
-                tvPreview.textSize = p.toFloat(); tvLabel.text = "크기: ${p}sp"
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {}
-        })
-        container.addView(tvPreview); container.addView(tvLabel); container.addView(seekBar)
-
-        AlertDialog.Builder(this)
-            .setTitle("시계 크기 조절")
-            .setView(container)
-            .setPositiveButton("저장") { _, _ ->
-                binding.tvTime.textSize = seekBar.progress.toFloat()
-                MessageStore.saveClockSizeSp(this, seekBar.progress)
-            }
-            .setNegativeButton("취소") { _, _ ->
-                binding.tvTime.textSize = currentSize.toFloat()
-            }
             .show()
     }
 }

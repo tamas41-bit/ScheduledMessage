@@ -124,6 +124,7 @@ class AlarmDisplayActivity : AppCompatActivity() {
                     binding.tvTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
                 }
                 binding.tvDate.text = SimpleDateFormat("M월 d일 EEEE", Locale("ko")).format(Date())
+                binding.tvDate.visibility = if (MessageStore.getShowDate(this@AlarmDisplayActivity)) View.VISIBLE else View.GONE
                 clockHandler.postDelayed(this, 1000)
             }
         }
@@ -134,6 +135,7 @@ class AlarmDisplayActivity : AppCompatActivity() {
         binding.tvTime.textSize = MessageStore.getClockSizeSp(this).toFloat()
         val fontName = MessageStore.getClockFont(this)
         fontList.find { it.first == fontName }?.let { binding.tvTime.typeface = it.second }
+        binding.tvDate.visibility = if (MessageStore.getShowDate(this)) View.VISIBLE else View.GONE
     }
 
     private fun loadBackground() {

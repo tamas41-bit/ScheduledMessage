@@ -65,6 +65,7 @@ object MessageStore {
     private const val KEY_CLOCK_CUSTOM_H = "clock_custom_hour"
     private const val KEY_CLOCK_CUSTOM_M = "clock_custom_minute"
     private const val KEY_CLOCK_USE_CUSTOM = "clock_use_custom"
+    private const val KEY_CLOCK_SHOW_DATE = "clock_show_date"
 
     fun saveClockPosition(context: Context, xPct: Float, yPct: Float) {
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
@@ -110,4 +111,12 @@ object MessageStore {
 
     fun getCustomMinute(context: Context) =
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_CUSTOM_M, 0)
+
+    fun saveShowDate(context: Context, show: Boolean) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CLOCK_SHOW_DATE, show).apply()
+    }
+
+    fun getShowDate(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean(KEY_CLOCK_SHOW_DATE, true)
 }
