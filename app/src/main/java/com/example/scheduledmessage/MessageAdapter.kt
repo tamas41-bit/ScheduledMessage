@@ -7,9 +7,8 @@ import com.example.scheduledmessage.databinding.ItemMessageBinding
 
 class MessageAdapter(
     private val items: MutableList<ScheduledMessage>,
-    private val onToggle: (ScheduledMessage) -> Unit,
-    private val onDelete: (ScheduledMessage) -> Unit,
-    private val onEdit: (ScheduledMessage) -> Unit
+    private val onEdit: (ScheduledMessage) -> Unit,
+    private val onDelete: (ScheduledMessage) -> Unit
 ) : RecyclerView.Adapter<MessageAdapter.VH>() {
 
     inner class VH(val b: ItemMessageBinding) : RecyclerView.ViewHolder(b.root)
@@ -21,14 +20,11 @@ class MessageAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val msg = items[position]
-        holder.b.tvTime.text = msg.timeString()
         holder.b.tvText.text = msg.text
         holder.b.tvRepeat.text = if (msg.isRepeating) "매일 반복" else "1회"
-        holder.b.switchEnabled.isChecked = msg.isEnabled
-        holder.b.switchEnabled.setOnCheckedChangeListener(null)
-        holder.b.switchEnabled.setOnCheckedChangeListener { _, _ -> onToggle(msg) }
+        holder.b.tvTime.text = if (msg.hour == -1) "시간 미설정" else msg.timeString()
+        holder.b.btnEdit.setOnClickListener { onEdit(msg) }
         holder.b.btnDelete.setOnClickListener { onDelete(msg) }
-        holder.b.root.setOnLongClickListener { onEdit(msg); true }
     }
 
     fun refresh(newItems: List<ScheduledMessage>) {

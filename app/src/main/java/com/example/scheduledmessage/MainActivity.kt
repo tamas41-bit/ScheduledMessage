@@ -1,14 +1,18 @@
 package com.example.scheduledmessage
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.LayoutInflater
+import android.widget.EditText
+import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,29 +25,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: MessageAdapter
-    private val messages get() = MessageStore.getAll(this)
-
-    private val addLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val msg = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                result.data?.getParcelableExtra("message", ScheduledMessage::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                result.data?.getParcelableExtra("message")
-            } ?: return@registerForActivityResult
-
-            val existing = MessageStore.getAll(this).find { it.id == msg.id }
-            if (existing != null) {
-                MessageStore.update(this, msg)
-                AlarmScheduler.cancel(this, msg.id)
-            } else {
-                MessageStore.add(this, msg)
-            }
-            if (msg.isEnabled) AlarmScheduler.schedule(this, msg)
-            refreshList()
-            Toast.makeText(this, "메세지가 등록되었습니다", Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private val bgPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -64,10 +45,10 @@ class MainActivity : AppCompatActivity() {
         loadBackground(MessageStore.getBackgroundUri(this))
         refreshList()
 
-        binding.fabAdd.setOnClickListener {
-            addLauncher.launch(Intent(this, AddMessageActivity::class.java))
-        }
+        // 전송 버튼
+        binding.btnSend.setOnClickListener { sendMessage() }
 
+        // 배경 변경
         binding.btnChangeBg.setOnClickListener {
             bgPickerLauncher.launch("image/*")
         }
@@ -78,35 +59,97 @@ class MainActivity : AppCompatActivity() {
         refreshList()
     }
 
+    private fun sendMessage() {
+        val text = binding.etInput.text.toString().trim()
+        if (text.isEmpty()) return
+
+        val msg = ScheduledMessage(
+            id = MessageStore.nextId(this),
+            text = text,
+            hour = -1  // 시간 미설정 상태로 추가
+        )
+        MessageStore.add(this, msg)
+        binding.etInput.setText("")
+        refreshList()
+
+        // 스크롤 최하단으로
+        binding.rvMessages.scrollToPosition(MessageStore.getAll(this).size - 1)
+    }
+
     private fun setupRecyclerView() {
         adapter = MessageAdapter(
-            messages.toMutableList(),
-            onToggle = { msg ->
-                val updated = msg.copy(isEnabled = !msg.isEnabled)
-                MessageStore.update(this, updated)
-                if (updated.isEnabled) AlarmScheduler.schedule(this, updated)
-                else AlarmScheduler.cancel(this, updated.id)
-                refreshList()
-            },
+            MessageStore.getAll(this).toMutableList(),
+            onEdit = { msg -> showEditTimeDialog(msg) },
             onDelete = { msg ->
                 AlarmScheduler.cancel(this, msg.id)
                 MessageStore.remove(this, msg.id)
                 refreshList()
-                Toast.makeText(this, "삭제되었습니다", Toast.LENGTH_SHORT).show()
-            },
-            onEdit = { msg ->
-                val intent = Intent(this, AddMessageActivity::class.java).putExtra("edit_message", msg)
-                addLauncher.launch(intent)
             }
         )
-        binding.rvMessages.layoutManager = LinearLayoutManager(this)
+        binding.rvMessages.layoutManager = LinearLayoutManager(this).apply {
+            stackFromEnd = true  // 최신 메세지가 아래에
+        }
         binding.rvMessages.adapter = adapter
     }
 
+    private fun showEditTimeDialog(msg: ScheduledMessage) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
+        val etTime = view.findViewById<EditText>(R.id.etTime)
+        val switchRepeat = view.findViewById<Switch>(R.id.switchRepeat)
+        val tvTitle = view.findViewById<TextView>(R.id.tvDialogTitle)
+
+        tvTitle.text = "\"${msg.text.take(20)}${if (msg.text.length > 20) "…" else ""}\""
+        if (msg.hour >= 0) {
+            etTime.setText("${msg.hour.toString().padStart(2,'0')}:${msg.minute.toString().padStart(2,'0')}:${msg.second.toString().padStart(2,'0')}")
+        }
+        switchRepeat.isChecked = msg.isRepeating
+
+        AlertDialog.Builder(this)
+            .setTitle("알림 시간 설정")
+            .setView(view)
+            .setPositiveButton("저장") { _, _ ->
+                val timeText = etTime.text.toString().trim()
+                val parsed = parseTime(timeText)
+                if (parsed == null) {
+                    Toast.makeText(this, "시간 형식: HH:MM:SS (예: 08:30:00)", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                val updated = msg.copy(
+                    hour = parsed.first,
+                    minute = parsed.second,
+                    second = parsed.third,
+                    isRepeating = switchRepeat.isChecked,
+                    isEnabled = true
+                )
+                MessageStore.update(this, updated)
+                AlarmScheduler.cancel(this, msg.id)
+                AlarmScheduler.schedule(this, updated)
+                refreshList()
+                Toast.makeText(this, "알림이 설정되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
+    // "HH:MM:SS" 또는 "HH:MM" 파싱
+    private fun parseTime(input: String): Triple<Int, Int, Int>? {
+        return try {
+            val parts = input.split(":")
+            val h = parts[0].trim().toInt()
+            val m = parts[1].trim().toInt()
+            val s = if (parts.size >= 3) parts[2].trim().toInt() else 0
+            if (h !in 0..23 || m !in 0..59 || s !in 0..59) null
+            else Triple(h, m, s)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun refreshList() {
-        adapter.refresh(MessageStore.getAll(this))
-        val isEmpty = MessageStore.getAll(this).isEmpty()
-        binding.tvEmpty.visibility = if (isEmpty) android.view.View.VISIBLE else android.view.View.GONE
+        val all = MessageStore.getAll(this)
+        adapter.refresh(all)
+        binding.tvEmpty.visibility =
+            if (all.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
     }
 
     private fun loadBackground(uriString: String?) {
