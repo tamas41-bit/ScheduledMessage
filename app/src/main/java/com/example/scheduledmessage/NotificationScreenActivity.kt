@@ -75,9 +75,9 @@ class NotificationScreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        hideSystemUI()
         binding = ActivityNotificationScreenBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        hideSystemUI()
 
         supportActionBar?.hide()
 
