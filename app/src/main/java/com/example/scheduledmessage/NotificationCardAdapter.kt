@@ -3,6 +3,7 @@ package com.example.scheduledmessage
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ItemNotificationCardBinding
@@ -32,18 +33,28 @@ class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>
         } else {
             holder.b.ivCardIcon.setImageResource(R.drawable.ic_notification_icon)
         }
-
-        holder.b.btnCardClose.setOnClickListener {
-            val pos = holder.adapterPosition
-            if (pos != RecyclerView.NO_POSITION) {
-                items.removeAt(pos)
-                notifyItemRemoved(pos)
-            }
-        }
     }
 
     fun addCard(card: NotificationCard) {
         items.add(0, card)
         notifyItemInserted(0)
+    }
+
+    fun removeAt(position: Int) {
+        if (position in items.indices) {
+            items.removeAt(position)
+            notifyItemRemoved(position)
+        }
+    }
+
+    /** RecyclerView에 붙이면 왼쪽 스와이프로 카드 삭제 */
+    fun attachSwipeToDismiss(recyclerView: RecyclerView) {
+        val callback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
+            override fun onSwiped(vh: RecyclerView.ViewHolder, direction: Int) {
+                removeAt(vh.adapterPosition)
+            }
+        }
+        ItemTouchHelper(callback).attachToRecyclerView(recyclerView)
     }
 }

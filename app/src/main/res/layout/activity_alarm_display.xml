@@ -64,8 +64,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:paddingHorizontal="16dp"
-        android:paddingBottom="16dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="24dp"
         android:clipToPadding="false"/>
 
 </FrameLayout>

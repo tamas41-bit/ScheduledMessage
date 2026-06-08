@@ -205,6 +205,7 @@ class NotificationScreenActivity : AppCompatActivity() {
         cardAdapter = NotificationCardAdapter()
         binding.rvCards.layoutManager = LinearLayoutManager(this)
         binding.rvCards.adapter = cardAdapter
+        cardAdapter.attachSwipeToDismiss(binding.rvCards)
     }
 
     private fun loadBackground(uriString: String?) {
