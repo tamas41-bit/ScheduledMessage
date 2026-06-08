@@ -1,5 +1,6 @@
 package com.example.scheduledmessage
 
+import android.graphics.Color
 import android.graphics.Typeface
 import android.content.Intent
 import android.net.Uri
@@ -232,39 +233,60 @@ class NotificationScreenActivity : AppCompatActivity() {
             showTimeDialog()
         }
 
-        // ── 알림 카드 색상 & 투명도 ──────────────────────────────────
-        val swatchColors = mapOf(
-            sheetView.findViewById<View>(R.id.swatchGray)   to Pair("#232323", sheetView.findViewById<View>(R.id.ringGray)),
-            sheetView.findViewById<View>(R.id.swatchBlack)  to Pair("#050505", sheetView.findViewById<View>(R.id.ringBlack)),
-            sheetView.findViewById<View>(R.id.swatchBlue)   to Pair("#1A2A3A", sheetView.findViewById<View>(R.id.ringBlue)),
-            sheetView.findViewById<View>(R.id.swatchPurple) to Pair("#251E35", sheetView.findViewById<View>(R.id.ringPurple)),
-            sheetView.findViewById<View>(R.id.swatchGreen)  to Pair("#182E18", sheetView.findViewById<View>(R.id.ringGreen)),
-            sheetView.findViewById<View>(R.id.swatchRed)    to Pair("#301818", sheetView.findViewById<View>(R.id.ringRed))
-        )
+        // ── 알림 카드 색상 (RGB) & 투명도 ──────────────────────────
+        val colorPreview = sheetView.findViewById<View>(R.id.viewColorPreview)
+        val seekR   = sheetView.findViewById<SeekBar>(R.id.seekR)
+        val seekG   = sheetView.findViewById<SeekBar>(R.id.seekG)
+        val seekB   = sheetView.findViewById<SeekBar>(R.id.seekB)
+        val tvR     = sheetView.findViewById<TextView>(R.id.tvR)
+        val tvG     = sheetView.findViewById<TextView>(R.id.tvG)
+        val tvB     = sheetView.findViewById<TextView>(R.id.tvB)
         val seekAlpha  = sheetView.findViewById<SeekBar>(R.id.seekCardAlpha)
         val tvAlphaLbl = sheetView.findViewById<TextView>(R.id.tvAlphaLabel)
+        val btnPreview = sheetView.findViewById<View>(R.id.btnPreview)
 
-        // 현재 저장된 값으로 초기화
+        // 저장된 색상 → R/G/B 분리
         val savedColor = MessageStore.getCardColor(this)
-        val savedAlpha = MessageStore.getCardAlpha(this)  // 0-255
-        val initPct    = (savedAlpha * 100 / 255).coerceIn(10, 100)
+        val parsedColor = Color.parseColor(savedColor)
+        var curR = Color.red(parsedColor)
+        var curG = Color.green(parsedColor)
+        var curB = Color.blue(parsedColor)
+
+        // 슬라이더 초기값 세팅
+        seekR.progress = curR ; tvR.text = "$curR"
+        seekG.progress = curG ; tvG.text = "$curG"
+        seekB.progress = curB ; tvB.text = "$curB"
+        colorPreview.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(Color.rgb(curR, curG, curB))
+
+        // 투명도 초기값
+        val savedAlpha = MessageStore.getCardAlpha(this)
+        val initPct = (savedAlpha * 100 / 255).coerceIn(10, 100)
         seekAlpha.progress = initPct
-        tvAlphaLbl.text    = "$initPct%"
-        // 저장된 색과 일치하는 스와치 링 표시
-        swatchColors.forEach { (swatchView, pair) ->
-            pair.second.visibility = if (pair.first == savedColor) View.VISIBLE else View.GONE
+        tvAlphaLbl.text = "$initPct%"
+
+        // RGB 슬라이더 공통 리스너
+        fun onColorChanged() {
+            curR = seekR.progress ; tvR.text = "$curR"
+            curG = seekG.progress ; tvG.text = "$curG"
+            curB = seekB.progress ; tvB.text = "$curB"
+            val hex = String.format("#%02X%02X%02X", curR, curG, curB)
+            colorPreview.backgroundTintList =
+                android.content.res.ColorStateList.valueOf(Color.rgb(curR, curG, curB))
+            MessageStore.saveCardColor(this, hex)
+            cardAdapter.notifyDataSetChanged()
         }
 
-        // 스와치 클릭
-        swatchColors.forEach { (swatchView, pair) ->
-            swatchView.setOnClickListener {
-                MessageStore.saveCardColor(this, pair.first)
-                // 링 선택 토글
-                swatchColors.values.forEach { it.second.visibility = View.GONE }
-                pair.second.visibility = View.VISIBLE
-                cardAdapter.notifyDataSetChanged()
+        val rgbListener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                if (fromUser) onColorChanged()
             }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
         }
+        seekR.setOnSeekBarChangeListener(rgbListener)
+        seekG.setOnSeekBarChangeListener(rgbListener)
+        seekB.setOnSeekBarChangeListener(rgbListener)
 
         // 투명도 슬라이더
         seekAlpha.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -279,6 +301,12 @@ class NotificationScreenActivity : AppCompatActivity() {
                 cardAdapter.notifyDataSetChanged()
             }
         })
+
+        // 미리보기 버튼
+        btnPreview.setOnClickListener {
+            sheet.dismiss()
+            startActivity(Intent(this, PreviewActivity::class.java))
+        }
 
         sheet.show()
     }

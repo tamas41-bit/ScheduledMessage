@@ -194,52 +194,145 @@
         android:paddingBottom="14dp"
         android:background="#2C2C2E">
 
-        <TextView
+        <!-- 섹션 제목 + 색상 미리보기 바 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="알림 카드 색상"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:layout_marginBottom="12dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
 
-        <!-- 색상 스와치 행 -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="알림 카드 색상"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"/>
+
+            <!-- 현재 색상 미리보기 박스 -->
+            <View
+                android:id="@+id/viewColorPreview"
+                android:layout_width="48dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_swatch_color"
+                android:backgroundTint="#232323"/>
+        </LinearLayout>
+
+        <!-- R 슬라이더 -->
         <LinearLayout
-            android:id="@+id/layoutSwatches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:text="R"
+                android:textColor="#FF6B6B"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <SeekBar
+                android:id="@+id/seekR"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:min="0"
+                android:max="255"
+                android:progress="35"
+                android:progressTint="#FF6B6B"
+                android:thumbTint="#FF6B6B"/>
+
+            <TextView
+                android:id="@+id/tvR"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:text="35"
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp"
+                android:gravity="end"/>
+        </LinearLayout>
+
+        <!-- G 슬라이더 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:text="G"
+                android:textColor="#6BFF8A"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+            <SeekBar
+                android:id="@+id/seekG"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:min="0"
+                android:max="255"
+                android:progress="35"
+                android:progressTint="#6BFF8A"
+                android:thumbTint="#6BFF8A"/>
+
+            <TextView
+                android:id="@+id/tvG"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:text="35"
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp"
+                android:gravity="end"/>
+        </LinearLayout>
+
+        <!-- B 슬라이더 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <FrameLayout android:id="@+id/swatchGray" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginEnd="10dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#232323"/>
-                <View android:id="@+id/ringGray" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
+            <TextView
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:text="B"
+                android:textColor="#6B9FFF"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
 
-            <FrameLayout android:id="@+id/swatchBlack" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginEnd="10dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#050505"/>
-                <View android:id="@+id/ringBlack" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
+            <SeekBar
+                android:id="@+id/seekB"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:min="0"
+                android:max="255"
+                android:progress="35"
+                android:progressTint="#6B9FFF"
+                android:thumbTint="#6B9FFF"/>
 
-            <FrameLayout android:id="@+id/swatchBlue" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginEnd="10dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#1A2A3A"/>
-                <View android:id="@+id/ringBlue" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
-
-            <FrameLayout android:id="@+id/swatchPurple" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginEnd="10dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#251E35"/>
-                <View android:id="@+id/ringPurple" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
-
-            <FrameLayout android:id="@+id/swatchGreen" android:layout_width="40dp" android:layout_height="40dp" android:layout_marginEnd="10dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#182E18"/>
-                <View android:id="@+id/ringGreen" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
-
-            <FrameLayout android:id="@+id/swatchRed" android:layout_width="40dp" android:layout_height="40dp">
-                <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_color" android:backgroundTint="#301818"/>
-                <View android:id="@+id/ringRed" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_swatch_ring" android:visibility="gone"/>
-            </FrameLayout>
-
+            <TextView
+                android:id="@+id/tvB"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:text="35"
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp"
+                android:gravity="end"/>
         </LinearLayout>
 
         <!-- 투명도 슬라이더 -->
@@ -248,7 +341,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="18dp">
+            android:layout_marginTop="16dp">
 
             <TextView
                 android:layout_width="0dp"
@@ -277,6 +370,19 @@
             android:layout_marginTop="8dp"
             android:progressTint="#FFFFFF"
             android:thumbTint="#FFFFFF"/>
+
+        <!-- 미리보기 버튼 -->
+        <Button
+            android:id="@+id/btnPreview"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:text="미리보기"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#0A84FF"
+            android:stateListAnimator="@null"/>
 
     </LinearLayout>
 
