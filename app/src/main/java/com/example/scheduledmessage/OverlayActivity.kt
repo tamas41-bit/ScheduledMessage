@@ -36,6 +36,7 @@ class OverlayActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val msgText = intent.getStringExtra("message_text") ?: ""
+        val iconUri = intent.getStringExtra("icon_uri")
 
         // 현재 시간
         val timeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
@@ -53,6 +54,14 @@ class OverlayActivity : AppCompatActivity() {
                 .load(bgUri)
                 .centerCrop()
                 .into(binding.ivBackground)
+        }
+
+        // 커스텀 아이콘
+        if (iconUri != null) {
+            Glide.with(this)
+                .load(android.net.Uri.parse(iconUri))
+                .circleCrop()
+                .into(binding.ivNotificationIcon)
         }
 
         // 닫기 버튼

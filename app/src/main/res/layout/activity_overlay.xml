@@ -74,11 +74,13 @@
 
                 <!-- 앱 아이콘 -->
                 <ImageView
+                    android:id="@+id/ivNotificationIcon"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
                     android:src="@drawable/ic_notification_icon"
                     android:background="@drawable/bg_icon_circle"
-                    android:padding="6dp"/>
+                    android:padding="6dp"
+                    android:scaleType="centerCrop"/>
 
                 <!-- 텍스트 영역 -->
                 <LinearLayout

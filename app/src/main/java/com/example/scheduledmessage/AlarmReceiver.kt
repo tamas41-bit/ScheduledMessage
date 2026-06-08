@@ -16,6 +16,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val msgId = intent.getIntExtra("message_id", -1)
         val msgText = intent.getStringExtra("message_text") ?: return
+        val msgIconUri = MessageStore.getAll(context).find { it.id == msgId }?.iconUri
 
         // 화면 깨우기
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -30,6 +31,7 @@ class AlarmReceiver : BroadcastReceiver() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra("message_id", msgId)
             putExtra("message_text", msgText)
+            putExtra("icon_uri", msgIconUri)
         }
         context.startActivity(overlayIntent)
 
