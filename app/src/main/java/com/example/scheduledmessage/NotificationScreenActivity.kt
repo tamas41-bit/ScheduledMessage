@@ -102,7 +102,10 @@ class NotificationScreenActivity : AppCompatActivity() {
                 }
                 MotionEvent.ACTION_UP -> {
                     val parent = binding.root
-                    MessageStore.saveClockPosition(this, view.x / parent.width, view.y / parent.height)
+                    // 중심 좌표 기준으로 저장
+                    val cx = (view.x + view.width / 2f) / parent.width
+                    val cy = (view.y + view.height / 2f) / parent.height
+                    MessageStore.saveClockPosition(this, cx, cy)
                     true
                 }
                 else -> false
