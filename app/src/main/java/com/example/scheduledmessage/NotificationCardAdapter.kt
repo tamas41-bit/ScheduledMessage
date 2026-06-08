@@ -1,5 +1,6 @@
 package com.example.scheduledmessage
 
+import android.graphics.Color
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -27,9 +28,17 @@ class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>
         holder.b.tvCardMessage.text  = card.messageText
         holder.b.tvCardTime.text     = relativeTime(card.timestampMs)
 
-        val cornerPx = (8 * holder.b.root.context.resources.displayMetrics.density).toInt()
+        // 저장된 카드 색상 + 투명도 적용
+        val ctx = holder.b.root.context
+        val hexColor = MessageStore.getCardColor(ctx)
+        val alpha = MessageStore.getCardAlpha(ctx)           // 0-255
+        val rgb = Color.parseColor(hexColor) and 0x00FFFFFF
+        val argb = (alpha shl 24) or rgb
+        holder.b.root.setCardBackgroundColor(argb)
+
+        val cornerPx = (8 * ctx.resources.displayMetrics.density).toInt()
         if (card.roomIconUri != null) {
-            Glide.with(holder.b.root.context)
+            Glide.with(ctx)
                 .load(Uri.parse(card.roomIconUri))
                 .apply(RequestOptions().centerCrop().transform(RoundedCorners(cornerPx)))
                 .into(holder.b.ivCardIcon)

@@ -232,6 +232,54 @@ class NotificationScreenActivity : AppCompatActivity() {
             showTimeDialog()
         }
 
+        // ── 알림 카드 색상 & 투명도 ──────────────────────────────────
+        val swatchColors = mapOf(
+            sheetView.findViewById<View>(R.id.swatchGray)   to Pair("#232323", sheetView.findViewById<View>(R.id.ringGray)),
+            sheetView.findViewById<View>(R.id.swatchBlack)  to Pair("#050505", sheetView.findViewById<View>(R.id.ringBlack)),
+            sheetView.findViewById<View>(R.id.swatchBlue)   to Pair("#1A2A3A", sheetView.findViewById<View>(R.id.ringBlue)),
+            sheetView.findViewById<View>(R.id.swatchPurple) to Pair("#251E35", sheetView.findViewById<View>(R.id.ringPurple)),
+            sheetView.findViewById<View>(R.id.swatchGreen)  to Pair("#182E18", sheetView.findViewById<View>(R.id.ringGreen)),
+            sheetView.findViewById<View>(R.id.swatchRed)    to Pair("#301818", sheetView.findViewById<View>(R.id.ringRed))
+        )
+        val seekAlpha  = sheetView.findViewById<SeekBar>(R.id.seekCardAlpha)
+        val tvAlphaLbl = sheetView.findViewById<TextView>(R.id.tvAlphaLabel)
+
+        // 현재 저장된 값으로 초기화
+        val savedColor = MessageStore.getCardColor(this)
+        val savedAlpha = MessageStore.getCardAlpha(this)  // 0-255
+        val initPct    = (savedAlpha * 100 / 255).coerceIn(10, 100)
+        seekAlpha.progress = initPct
+        tvAlphaLbl.text    = "$initPct%"
+        // 저장된 색과 일치하는 스와치 링 표시
+        swatchColors.forEach { (swatchView, pair) ->
+            pair.second.visibility = if (pair.first == savedColor) View.VISIBLE else View.GONE
+        }
+
+        // 스와치 클릭
+        swatchColors.forEach { (swatchView, pair) ->
+            swatchView.setOnClickListener {
+                MessageStore.saveCardColor(this, pair.first)
+                // 링 선택 토글
+                swatchColors.values.forEach { it.second.visibility = View.GONE }
+                pair.second.visibility = View.VISIBLE
+                cardAdapter.notifyDataSetChanged()
+            }
+        }
+
+        // 투명도 슬라이더
+        seekAlpha.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                tvAlphaLbl.text = "$p%"
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                val pct = sb?.progress ?: 72
+                val alpha255 = (pct * 255 / 100).coerceIn(0, 255)
+                MessageStore.saveCardAlpha(this@NotificationScreenActivity, alpha255)
+                cardAdapter.notifyDataSetChanged()
+            }
+        })
+
         sheet.show()
     }
 

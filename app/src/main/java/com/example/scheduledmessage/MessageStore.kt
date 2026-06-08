@@ -119,4 +119,27 @@ object MessageStore {
 
     fun getShowDate(context: Context) =
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean(KEY_CLOCK_SHOW_DATE, true)
+
+    // 알림 카드 색상 / 투명도
+    private const val KEY_CARD_COLOR = "card_color"
+    private const val KEY_CARD_ALPHA = "card_alpha"
+
+    fun saveCardColor(context: Context, color: String) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putString(KEY_CARD_COLOR, color).apply()
+    }
+
+    fun getCardColor(context: Context): String =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .getString(KEY_CARD_COLOR, "#232323") ?: "#232323"
+
+    fun saveCardAlpha(context: Context, alpha: Int) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CARD_ALPHA, alpha).apply()
+    }
+
+    /** 0–255; 기본값 184 ≈ 72% */
+    fun getCardAlpha(context: Context): Int =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .getInt(KEY_CARD_ALPHA, 184)
 }
