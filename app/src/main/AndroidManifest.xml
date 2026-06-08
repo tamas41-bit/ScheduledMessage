@@ -31,10 +31,6 @@
             android:exported="false"/>
 
         <activity
-            android:name=".AddMessageActivity"
-            android:exported="false"/>
-
-        <activity
             android:name=".OverlayActivity"
             android:exported="false"
             android:theme="@style/Theme.Overlay"/>
