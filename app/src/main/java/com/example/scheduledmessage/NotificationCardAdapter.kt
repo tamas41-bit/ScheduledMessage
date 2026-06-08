@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.example.scheduledmessage.databinding.ItemNotificationCardBinding
 
 class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>() {
@@ -25,10 +27,11 @@ class NotificationCardAdapter : RecyclerView.Adapter<NotificationCardAdapter.VH>
         holder.b.tvCardMessage.text  = card.messageText
         holder.b.tvCardTime.text     = relativeTime(card.timestampMs)
 
+        val cornerPx = (8 * holder.b.root.context.resources.displayMetrics.density).toInt()
         if (card.roomIconUri != null) {
             Glide.with(holder.b.root.context)
                 .load(Uri.parse(card.roomIconUri))
-                .centerCrop()
+                .apply(RequestOptions().centerCrop().transform(RoundedCorners(cornerPx)))
                 .into(holder.b.ivCardIcon)
         } else {
             holder.b.ivCardIcon.setImageResource(R.drawable.ic_notification_icon)

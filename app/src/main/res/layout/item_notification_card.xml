@@ -27,8 +27,8 @@
             android:layout_marginTop="1dp"
             android:src="@drawable/ic_notification_icon"
             android:scaleType="centerCrop"
-            android:background="@drawable/bg_card_icon"
-            android:padding="5dp"/>
+            android:clipToOutline="true"
+            android:background="@drawable/bg_card_icon"/>
 
         <!-- 오른쪽: 앱이름+시간 / 메시지 -->
         <LinearLayout

@@ -12,11 +12,6 @@
         android:scaleType="centerCrop"
         android:src="@drawable/bg_default"/>
 
-    <!-- 반투명 다크 오버레이 -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#88000000"/>
 
     <!-- 시계 (드래그 없이 고정 위치로 표시) -->
     <LinearLayout
