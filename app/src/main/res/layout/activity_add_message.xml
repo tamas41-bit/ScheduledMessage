@@ -28,7 +28,6 @@
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:hint="화면에 표시할 내용을 입력하세요"
-        android:hintTextColor="#555555"
         android:textColor="#FFFFFF"
         android:textSize="15sp"
         android:background="@drawable/bg_input_dark"
