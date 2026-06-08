@@ -41,7 +41,11 @@
         <activity
             android:name=".NotificationScreenActivity"
             android:exported="false"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.Overlay"/>
 
         <receiver
             android:name=".AlarmReceiver"
