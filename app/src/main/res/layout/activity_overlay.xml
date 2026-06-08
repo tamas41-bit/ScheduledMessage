@@ -19,14 +19,13 @@
         android:layout_height="match_parent"
         android:background="#88000000"/>
 
-    <!-- 상단: 시간/날짜 -->
+    <!-- 시계 (드래그 가능) -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/layoutClock"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginTop="80dp"
-        android:layout_gravity="top">
+        android:gravity="center">
 
         <TextView
             android:id="@+id/tvTime"
@@ -48,7 +47,7 @@
             android:layout_marginTop="4dp"/>
     </LinearLayout>
 
-    <!-- 중앙: 알림 카드 (잠금화면 알림 스타일) -->
+    <!-- 중앙: 알림 카드 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -72,7 +71,6 @@
                 android:padding="16dp"
                 android:gravity="center_vertical">
 
-                <!-- 앱 아이콘 -->
                 <ImageView
                     android:id="@+id/ivNotificationIcon"
                     android:layout_width="36dp"
@@ -82,7 +80,6 @@
                     android:padding="6dp"
                     android:scaleType="centerCrop"/>
 
-                <!-- 텍스트 영역 -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -127,7 +124,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- 닫기 버튼 -->
         <Button
             android:id="@+id/btnDismiss"
             android:layout_width="match_parent"
@@ -137,6 +133,47 @@
             android:textSize="16sp"
             android:backgroundTint="#44FFFFFF"
             android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+    <!-- 시계 설정 버튼 (우상단) -->
+    <LinearLayout
+        android:id="@+id/layoutClockControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:orientation="vertical"
+        android:layout_margin="16dp"
+        android:background="#66000000"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/btnEditClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏰ 시계 설정"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:padding="4dp"/>
+
+        <TextView
+            android:id="@+id/btnFontSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✏ 폰트"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:padding="4dp"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/btnClockSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔡 크기"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:padding="4dp"
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
 
     <!-- 하단 스와이프 힌트 -->

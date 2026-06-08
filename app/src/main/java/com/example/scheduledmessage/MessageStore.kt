@@ -56,4 +56,58 @@ object MessageStore {
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
             .putString(KEY_BG, uri).apply()
     }
+
+    // 시계 설정
+    private const val KEY_CLOCK_X = "clock_x_pct"
+    private const val KEY_CLOCK_Y = "clock_y_pct"
+    private const val KEY_CLOCK_SIZE = "clock_size_sp"
+    private const val KEY_CLOCK_FONT = "clock_font"
+    private const val KEY_CLOCK_CUSTOM_H = "clock_custom_hour"
+    private const val KEY_CLOCK_CUSTOM_M = "clock_custom_minute"
+    private const val KEY_CLOCK_USE_CUSTOM = "clock_use_custom"
+
+    fun saveClockPosition(context: Context, xPct: Float, yPct: Float) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putFloat(KEY_CLOCK_X, xPct).putFloat(KEY_CLOCK_Y, yPct).apply()
+    }
+
+    fun getClockXPct(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getFloat(KEY_CLOCK_X, 0.5f)
+
+    fun getClockYPct(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getFloat(KEY_CLOCK_Y, 0.2f)
+
+    fun saveClockSizeSp(context: Context, sp: Int) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLOCK_SIZE, sp).apply()
+    }
+
+    fun getClockSizeSp(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_SIZE, 72)
+
+    fun saveClockFont(context: Context, font: String) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putString(KEY_CLOCK_FONT, font).apply()
+    }
+
+    fun getClockFont(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            .getString(KEY_CLOCK_FONT, "DEFAULT") ?: "DEFAULT"
+
+    fun saveCustomTime(context: Context, useCustom: Boolean, hour: Int, minute: Int) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_CLOCK_USE_CUSTOM, useCustom)
+            .putInt(KEY_CLOCK_CUSTOM_H, hour)
+            .putInt(KEY_CLOCK_CUSTOM_M, minute)
+            .apply()
+    }
+
+    fun getUseCustomTime(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean(KEY_CLOCK_USE_CUSTOM, false)
+
+    fun getCustomHour(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_CUSTOM_H, 12)
+
+    fun getCustomMinute(context: Context) =
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt(KEY_CLOCK_CUSTOM_M, 0)
 }
