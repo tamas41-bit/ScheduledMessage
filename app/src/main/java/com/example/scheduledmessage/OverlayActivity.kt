@@ -1,4 +1,4 @@
-package com.example.scheduledmessage
+﻿package com.example.scheduledmessage
 
 import android.graphics.Typeface
 import android.os.Build
@@ -26,6 +26,7 @@ class OverlayActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOverlayBinding
     private val handler = Handler(Looper.getMainLooper())
     private var clockRunnable: Runnable? = null
+    private var roomId: Int = 0
 
     // 드래그용
     private var dX = 0f
@@ -68,6 +69,7 @@ class OverlayActivity : AppCompatActivity() {
         binding = ActivityOverlayBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        roomId = intent.getIntExtra("room_id", 0)
         val msgText = intent.getStringExtra("message_text") ?: ""
         val iconUri = intent.getStringExtra("icon_uri")
         val roomName = intent.getStringExtra("room_name") ?: "예약 메세지"
@@ -76,7 +78,7 @@ class OverlayActivity : AppCompatActivity() {
         binding.tvNotificationTitle.text = roomName
 
         // 배경
-        val bgUri = MessageStore.getBackgroundUri(this)
+        val bgUri = MessageStore.getNotifBgUri(this, roomId)
         if (bgUri != null) {
             Glide.with(this).load(bgUri).centerCrop().into(binding.ivBackground)
         }
@@ -108,7 +110,7 @@ class OverlayActivity : AppCompatActivity() {
                     val parent = binding.root
                     val xPct = view.x / parent.width
                     val yPct = view.y / parent.height
-                    MessageStore.saveClockPosition(this, xPct, yPct)
+                    MessageStore.saveClockPosition(this, roomId, xPct, yPct)
                     true
                 }
                 else -> false
@@ -133,8 +135,8 @@ class OverlayActivity : AppCompatActivity() {
         // 시계 초기 위치 설정 (뷰가 측정된 후)
         binding.root.post {
             val parent = binding.root
-            val xPct = MessageStore.getClockXPct(this)
-            val yPct = MessageStore.getClockYPct(this)
+            val xPct = MessageStore.getClockXPct(this, roomId)
+            val yPct = MessageStore.getClockYPct(this, roomId)
             val clockW = binding.layoutClock.width.toFloat()
             val clockH = binding.layoutClock.height.toFloat()
             binding.layoutClock.x = xPct * parent.width - clockW / 2
@@ -172,9 +174,9 @@ class OverlayActivity : AppCompatActivity() {
     }
 
     private fun updateClock() {
-        if (MessageStore.getUseCustomTime(this)) {
-            val h = MessageStore.getCustomHour(this)
-            val m = MessageStore.getCustomMinute(this)
+        if (MessageStore.getUseCustomTime(this, roomId)) {
+            val h = MessageStore.getCustomHour(this, roomId)
+            val m = MessageStore.getCustomMinute(this, roomId)
             binding.tvTime.text = String.format("%02d:%02d", h, m)
         } else {
             binding.tvTime.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
@@ -184,11 +186,11 @@ class OverlayActivity : AppCompatActivity() {
 
     private fun applyClockSettings() {
         // 크기
-        val sizeSp = MessageStore.getClockSizeSp(this)
+        val sizeSp = MessageStore.getClockSizeSp(this, roomId)
         binding.tvTime.textSize = sizeSp.toFloat()
 
         // 폰트
-        val fontName = MessageStore.getClockFont(this)
+        val fontName = MessageStore.getClockFont(this, roomId)
         val fontItem = fontList.find { it.name == fontName }
         if (fontItem != null) {
             binding.tvTime.typeface = fontItem.typeface
@@ -207,8 +209,8 @@ class OverlayActivity : AppCompatActivity() {
 
         val pickerH = NumberPicker(this).apply {
             minValue = 0; maxValue = 23
-            value = if (MessageStore.getUseCustomTime(this@OverlayActivity))
-                MessageStore.getCustomHour(this@OverlayActivity)
+            value = if (MessageStore.getUseCustomTime(this@OverlayActivity, roomId))
+                MessageStore.getCustomHour(this@OverlayActivity, roomId)
             else
                 java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             setFormatter { v -> String.format("%02d", v) }
@@ -220,8 +222,8 @@ class OverlayActivity : AppCompatActivity() {
         }
         val pickerM = NumberPicker(this).apply {
             minValue = 0; maxValue = 59
-            value = if (MessageStore.getUseCustomTime(this@OverlayActivity))
-                MessageStore.getCustomMinute(this@OverlayActivity)
+            value = if (MessageStore.getUseCustomTime(this@OverlayActivity, roomId))
+                MessageStore.getCustomMinute(this@OverlayActivity, roomId)
             else
                 java.util.Calendar.getInstance().get(java.util.Calendar.MINUTE)
             setFormatter { v -> String.format("%02d", v) }
@@ -249,11 +251,11 @@ class OverlayActivity : AppCompatActivity() {
             .setTitle("시계 시간 설정")
             .setView(container)
             .setPositiveButton("저장") { _, _ ->
-                MessageStore.saveCustomTime(this, true, pickerH.value, pickerM.value)
+                MessageStore.saveCustomTime(this, roomId, true, pickerH.value, pickerM.value)
                 updateClock()
             }
             .setNeutralButton("실제 시간 사용") { _, _ ->
-                MessageStore.saveCustomTime(this, false, 0, 0)
+                MessageStore.saveCustomTime(this, roomId, false, 0, 0)
                 updateClock()
             }
             .setNegativeButton("취소", null)
@@ -263,7 +265,7 @@ class OverlayActivity : AppCompatActivity() {
     // ── 폰트 선택 다이얼로그 ─────────────────────────────────────────
     private fun showFontDialog() {
         val names = fontList.map { it.name }.toTypedArray()
-        val currentFont = MessageStore.getClockFont(this)
+        val currentFont = MessageStore.getClockFont(this, roomId)
         val currentIdx = fontList.indexOfFirst { it.name == currentFont }.coerceAtLeast(0)
 
         AlertDialog.Builder(this)
@@ -271,7 +273,7 @@ class OverlayActivity : AppCompatActivity() {
             .setSingleChoiceItems(names, currentIdx) { dialog, which ->
                 val selected = fontList[which]
                 binding.tvTime.typeface = selected.typeface
-                MessageStore.saveClockFont(this, selected.name)
+                MessageStore.saveClockFont(this, roomId, selected.name)
                 dialog.dismiss()
             }
             .setNegativeButton("취소", null)
@@ -285,7 +287,7 @@ class OverlayActivity : AppCompatActivity() {
             setPadding(48, 32, 48, 16)
         }
 
-        val currentSize = MessageStore.getClockSizeSp(this)
+        val currentSize = MessageStore.getClockSizeSp(this, roomId)
         val tvPreview = TextView(this).apply {
             text = binding.tvTime.text
             textSize = currentSize.toFloat()
@@ -327,7 +329,7 @@ class OverlayActivity : AppCompatActivity() {
             .setPositiveButton("저장") { _, _ ->
                 val newSize = seekBar.progress
                 binding.tvTime.textSize = newSize.toFloat()
-                MessageStore.saveClockSizeSp(this, newSize)
+                MessageStore.saveClockSizeSp(this, roomId, newSize)
             }
             .setNegativeButton("취소") { _, _ ->
                 binding.tvTime.textSize = currentSize.toFloat()

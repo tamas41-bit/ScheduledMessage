@@ -1,4 +1,4 @@
-package com.example.scheduledmessage
+﻿package com.example.scheduledmessage
 
 import android.Manifest
 import android.app.AlarmManager
@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ActivityMainBinding
 import java.util.Calendar
 
