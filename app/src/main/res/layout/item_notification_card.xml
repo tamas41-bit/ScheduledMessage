@@ -15,8 +15,8 @@
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="14dp"
-        android:paddingTop="11dp"
-        android:paddingBottom="12dp">
+        android:paddingTop="13dp"
+        android:paddingBottom="14dp">
 
         <!-- 앱 아이콘 (둥근 사각형) -->
         <ImageView
