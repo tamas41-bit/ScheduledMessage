@@ -1,26 +1,20 @@
 ﻿package com.example.scheduledmessage
 
-import android.Manifest
-import android.app.AlarmManager
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.widget.EditText
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.scheduledmessage.databinding.ActivityMainBinding
-import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,6 +22,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: MessageAdapter
     private var roomId: Int = 0
     private var roomName: String = "예약 메세지"
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val scheduledRunnables = mutableListOf<Runnable>()
+    private var isNotifRunning = false
 
     private val profilePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -49,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = roomName
         binding.tvRoomTitle.text = roomName
 
-        requestPermissions()
         setupRecyclerView()
         loadRoomProfile()
         refreshList()
@@ -61,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             })
         }
         binding.ivRoomProfile.setOnClickListener { profilePickerLauncher.launch("image/*") }
+        binding.btnStartNotif.setOnClickListener { toggleNotif() }
     }
 
     override fun onResume() {
@@ -69,22 +67,81 @@ class MainActivity : AppCompatActivity() {
         refreshList()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        stopNotif()
+    }
+
+    private fun toggleNotif() {
+        if (isNotifRunning) {
+            stopNotif()
+        } else {
+            startNotif()
+        }
+    }
+
+    private fun startNotif() {
+        val messages = MessageStore.getAll(this, roomId).filter { it.isEnabled }
+        if (messages.isEmpty()) {
+            Toast.makeText(this, "메세지가 없습니다", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val room = RoomStore.getAll(this).find { it.id == roomId }
+        val iconUri = room?.iconUri
+
+        messages.forEach { msg ->
+            val r = Runnable {
+                val intent = Intent(this, AlarmDisplayActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("message_id", msg.id)
+                    putExtra("message_text", msg.text)
+                    putExtra("room_id", roomId)
+                    putExtra("room_name", room?.name ?: "예약 메세지")
+                    putExtra("icon_uri", iconUri)
+                }
+                startActivity(intent)
+            }
+            scheduledRunnables.add(r)
+            handler.postDelayed(r, msg.delaySeconds * 1000L)
+        }
+
+        isNotifRunning = true
+        binding.btnStartNotif.text = "■ 알림 중지"
+        binding.btnStartNotif.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#B71C1C"))
+
+        // 마지막 메세지 표시 후 자동으로 버튼 상태 복귀
+        val maxDelay = messages.maxOf { it.delaySeconds } * 1000L
+        val resetR = Runnable { resetNotifButton() }
+        scheduledRunnables.add(resetR)
+        handler.postDelayed(resetR, maxDelay + 500L)
+
+        Toast.makeText(this, "알림 시작!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun stopNotif() {
+        scheduledRunnables.forEach { handler.removeCallbacks(it) }
+        scheduledRunnables.clear()
+        resetNotifButton()
+    }
+
+    private fun resetNotifButton() {
+        isNotifRunning = false
+        binding.btnStartNotif.text = "▶ 메세지 알림 시작"
+        binding.btnStartNotif.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2E7D32"))
+    }
+
     private fun sendMessage() {
         val text = binding.etInput.text.toString().trim()
         if (text.isEmpty()) return
-
-        // 기본 알림 시간 = 지금 + 5분
-        val cal = Calendar.getInstance().apply { add(Calendar.MINUTE, 5) }
-
         val msg = ScheduledMessage(
             id = MessageStore.nextId(this, roomId),
             text = text,
-            hour = cal.get(Calendar.HOUR_OF_DAY),
-            minute = cal.get(Calendar.MINUTE),
-            second = cal.get(Calendar.SECOND)
+            delaySeconds = 0
         )
         MessageStore.add(this, roomId, msg)
-        AlarmScheduler.schedule(this, msg, roomId)
         binding.etInput.setText("")
         refreshList()
         binding.rvMessages.scrollToPosition(MessageStore.getAll(this, roomId).size - 1)
@@ -93,9 +150,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         adapter = MessageAdapter(
             MessageStore.getAll(this, roomId).toMutableList(),
-            onEdit = { msg -> showEditTimeDialog(msg) },
+            onEdit = { msg -> showEditDelayDialog(msg) },
             onDelete = { msg ->
-                AlarmScheduler.cancel(this, msg.id)
                 MessageStore.remove(this, roomId, msg.id)
                 refreshList()
             }
@@ -106,48 +162,26 @@ class MainActivity : AppCompatActivity() {
         binding.rvMessages.adapter = adapter
     }
 
-    private fun showEditTimeDialog(msg: ScheduledMessage) {
+    private fun showEditDelayDialog(msg: ScheduledMessage) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
-        val etHour = view.findViewById<EditText>(R.id.etHour)
-        val etMinute = view.findViewById<EditText>(R.id.etMinute)
-        val etSecond = view.findViewById<EditText>(R.id.etSecond)
-        val switchRepeat = view.findViewById<Switch>(R.id.switchRepeat)
+        val etDelay = view.findViewById<EditText>(R.id.etDelaySeconds)
         val tvTitle = view.findViewById<TextView>(R.id.tvDialogTitle)
 
         tvTitle.text = "\"${msg.text.take(20)}${if (msg.text.length > 20) "…" else ""}\""
-
-        val h = if (msg.hour >= 0) msg.hour else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val m = if (msg.hour >= 0) msg.minute else Calendar.getInstance().also { it.add(Calendar.MINUTE, 5) }.get(Calendar.MINUTE)
-        val s = if (msg.hour >= 0) msg.second else 0
-
-        etHour.setText(h.toString())
-        etMinute.setText(m.toString())
-        etSecond.setText(s.toString())
-        switchRepeat.isChecked = msg.isRepeating
+        etDelay.setText(msg.delaySeconds.toString())
 
         AlertDialog.Builder(this)
-            .setTitle("알림 시간 설정")
+            .setTitle("알림 딜레이 설정")
             .setView(view)
             .setPositiveButton("저장") { _, _ ->
-                val hour = etHour.text.toString().toIntOrNull()
-                val minute = etMinute.text.toString().toIntOrNull()
-                val second = etSecond.text.toString().toIntOrNull() ?: 0
-                if (hour == null || hour !in 0..23 || minute == null || minute !in 0..59 || second !in 0..59) {
-                    Toast.makeText(this, "올바른 시간을 입력해주세요", Toast.LENGTH_SHORT).show()
+                val delay = etDelay.text.toString().toIntOrNull()
+                if (delay == null || delay < 0) {
+                    Toast.makeText(this, "올바른 초를 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                val updated = msg.copy(
-                    hour = hour,
-                    minute = minute,
-                    second = second,
-                    isRepeating = switchRepeat.isChecked,
-                    isEnabled = true
-                )
+                val updated = msg.copy(delaySeconds = delay)
                 MessageStore.update(this, roomId, updated)
-                AlarmScheduler.cancel(this, msg.id)
-                AlarmScheduler.schedule(this, updated, roomId)
                 refreshList()
-                Toast.makeText(this, "알림이 설정되었습니다", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("취소", null)
             .show()
@@ -170,27 +204,6 @@ class MainActivity : AppCompatActivity() {
                 .into(binding.ivRoomProfile)
         } else {
             binding.ivRoomProfile.setImageResource(android.R.drawable.ic_menu_camera)
-        }
-    }
-
-    private fun requestPermissions() {
-        val perms = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
-                perms.add(Manifest.permission.POST_NOTIFICATIONS)
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED)
-                perms.add(Manifest.permission.READ_MEDIA_IMAGES)
-        } else {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-                perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-        if (perms.isNotEmpty()) requestPermissions(perms.toTypedArray(), 100)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val am = getSystemService(ALARM_SERVICE) as AlarmManager
-            if (!am.canScheduleExactAlarms()) {
-                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).also { startActivity(it) }
-            }
         }
     }
 }

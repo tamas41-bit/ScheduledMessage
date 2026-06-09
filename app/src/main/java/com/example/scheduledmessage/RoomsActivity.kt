@@ -1,4 +1,4 @@
-package com.example.scheduledmessage
+﻿package com.example.scheduledmessage
 
 import android.app.AlertDialog
 import android.content.Intent
@@ -110,7 +110,6 @@ class RoomsActivity : AppCompatActivity() {
             .setTitle("대화창 삭제")
             .setMessage("\"${room.name}\" 대화창과 모든 예약 메세지를 삭제할까요?")
             .setPositiveButton("삭제") { _, _ ->
-                MessageStore.getAll(this, room.id).forEach { AlarmScheduler.cancel(this, it.id) }
                 MessageStore.removeAll(this, room.id)
                 RoomStore.remove(this, room.id)
                 refreshList()

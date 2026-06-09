@@ -1,4 +1,4 @@
-package com.example.scheduledmessage
+﻿package com.example.scheduledmessage
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -21,8 +21,7 @@ class MessageAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val msg = items[position]
         holder.b.tvText.text = msg.text
-        holder.b.tvRepeat.text = if (msg.isRepeating) "매일 반복" else "1회"
-        holder.b.tvTime.text = if (msg.hour == -1) "시간 미설정" else msg.timeString()
+        holder.b.tvTime.text = msg.delayString()
         holder.b.btnEdit.setOnClickListener { onEdit(msg) }
         holder.b.btnDelete.setOnClickListener { onDelete(msg) }
     }

@@ -16,7 +16,6 @@
         android:gravity="center_vertical"
         android:background="#1A1A1A">
 
-        <!-- 프로필 이미지 (탭하면 변경) -->
         <ImageView
             android:id="@+id/ivRoomProfile"
             android:layout_width="42dp"
@@ -49,6 +48,17 @@
             android:textColor="#FFFFFF"/>
     </LinearLayout>
 
+    <!-- 알림 시작/중지 버튼 -->
+    <Button
+        android:id="@+id/btnStartNotif"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="▶ 메세지 알림 시작"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:backgroundTint="#2E7D32"
+        android:textColor="#FFFFFF"/>
+
     <!-- 메세지 목록 + 빈 상태 -->
     <FrameLayout
         android:layout_width="match_parent"
@@ -74,7 +84,7 @@
 
     </FrameLayout>
 
-    <!-- 하단 입력창 (카카오톡 스타일) -->
+    <!-- 하단 입력창 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
