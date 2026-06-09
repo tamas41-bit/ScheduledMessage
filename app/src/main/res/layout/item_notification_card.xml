@@ -13,17 +13,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="14dp"
-        android:paddingTop="13dp"
-        android:paddingBottom="14dp">
+        android:paddingStart="14dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="17dp"
+        android:paddingBottom="18dp">
 
         <!-- 앱 아이콘 (둥근 사각형) -->
         <ImageView
             android:id="@+id/ivCardIcon"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginEnd="10dp"
+            android:layout_width="57dp"
+            android:layout_height="57dp"
+            android:layout_marginEnd="13dp"
             android:layout_marginTop="1dp"
             android:src="@drawable/ic_notification_icon"
             android:scaleType="centerCrop"
@@ -51,7 +51,7 @@
                     android:layout_weight="1"
                     android:text="방 이름"
                     android:textColor="#BFEBEBF5"
-                    android:textSize="12sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.02"
                     android:maxLines="1"
@@ -64,7 +64,7 @@
                     android:layout_marginStart="6dp"
                     android:text="방금"
                     android:textColor="#80EBEBF5"
-                    android:textSize="12sp"/>
+                    android:textSize="16sp"/>
 
             </LinearLayout>
 
@@ -75,18 +75,18 @@
                 android:layout_height="wrap_content"
                 android:text="메세지 내용이 여기에 표시됩니다"
                 android:textColor="#F0F0F5"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:lineSpacingMultiplier="1.25"
                 android:maxLines="4"
                 android:ellipsize="end"
-                android:layout_marginTop="3dp"/>
+                android:layout_marginTop="4dp"/>
 
             <!-- 첨부 이미지 -->
             <ImageView
                 android:id="@+id/ivCardImage"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:layout_marginTop="8dp"
+                android:layout_height="234dp"
+                android:layout_marginTop="10dp"
                 android:scaleType="centerCrop"
                 android:clipToOutline="true"
                 android:background="@drawable/bg_card_icon"

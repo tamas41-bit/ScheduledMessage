@@ -46,7 +46,7 @@ class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<Notifi
         holder.b.tvCardMessage.typeface =
             if (card.textBold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
         // 메세지별 글자 크기
-        holder.b.tvCardMessage.textSize = (card.textSizeSp ?: 14).toFloat()
+        holder.b.tvCardMessage.textSize = (card.textSizeSp ?: 18).toFloat()
 
         val cornerPx = (8 * ctx.resources.displayMetrics.density).toInt()
         if (card.roomIconUri != null) {
