@@ -76,8 +76,11 @@ class AlarmDisplayActivity : AppCompatActivity() {
             return
         }
 
-        // 첫 메세지 딜레이 시각에 배경+시계 공개
-        val firstDelay = messages.minOf { it.delaySeconds } * 1000L
+        // 시작 대기 시간 (설정값) + 첫 메세지 딜레이 중 더 큰 값에 배경+시계 공개
+        val startDelaySec = MessageStore.getStartDelay(this, roomId)
+        val firstMsgDelay = messages.minOf { it.delaySeconds }
+        val revealDelay = maxOf(startDelaySec, firstMsgDelay) * 1000L
+
         val revealR = Runnable {
             loadBackground()
             startClock()
@@ -85,9 +88,9 @@ class AlarmDisplayActivity : AppCompatActivity() {
             binding.layoutClock.visibility = View.VISIBLE
         }
         scheduledRunnables.add(revealR)
-        msgHandler.postDelayed(revealR, firstDelay)
+        msgHandler.postDelayed(revealR, revealDelay)
 
-        // 각 메세지를 해당 딜레이에 카드 추가
+        // 각 메세지를 (startDelay + 각 딜레이) 시각에 카드 추가
         messages.forEach { msg ->
             val r = Runnable {
                 cardAdapter.addCard(
@@ -100,7 +103,7 @@ class AlarmDisplayActivity : AppCompatActivity() {
                 binding.rvCards.scrollToPosition(0)
             }
             scheduledRunnables.add(r)
-            msgHandler.postDelayed(r, msg.delaySeconds * 1000L)
+            msgHandler.postDelayed(r, (startDelaySec + msg.delaySeconds) * 1000L)
         }
     }
 

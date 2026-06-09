@@ -183,6 +183,54 @@
 
     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#3A3A3C"/>
 
+    <!-- 시작 대기 시간 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:background="#2C2C2E">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="시작 대기 시간"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/tvStartDelayLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3초"
+                android:textColor="#99FFFFFF"
+                android:textSize="14sp"/>
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/seekStartDelay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:min="0"
+            android:max="60"
+            android:progress="3"
+            android:layout_marginTop="8dp"
+            android:progressTint="#FFFFFF"
+            android:thumbTint="#FFFFFF"/>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#3A3A3C"/>
+
     <!-- 알림 카드 색상 & 투명도 -->
     <LinearLayout
         android:layout_width="match_parent"

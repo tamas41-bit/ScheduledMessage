@@ -104,6 +104,13 @@ object MessageStore {
     fun getShowDate(context: Context, roomId: Int) =
         p(context).getBoolean("clock_show_date_$roomId", true)
 
+    // 시작 대기 시간 (초)
+    fun saveStartDelay(context: Context, roomId: Int, seconds: Int) =
+        p(context).edit().putInt("start_delay_$roomId", seconds).apply()
+
+    fun getStartDelay(context: Context, roomId: Int): Int =
+        p(context).getInt("start_delay_$roomId", 3)
+
     // 알림 카드 색상 / 투명도
     fun saveCardColor(context: Context, roomId: Int, color: String) =
         p(context).edit().putString("card_color_$roomId", color).apply()

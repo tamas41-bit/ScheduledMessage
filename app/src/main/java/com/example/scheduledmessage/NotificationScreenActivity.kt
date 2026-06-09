@@ -286,6 +286,22 @@ class NotificationScreenActivity : AppCompatActivity() {
             }
         })
 
+        // 시작 대기 시간 슬라이더
+        val seekStartDelay = sheetView.findViewById<SeekBar>(R.id.seekStartDelay)
+        val tvStartDelayLabel = sheetView.findViewById<TextView>(R.id.tvStartDelayLabel)
+        val savedStartDelay = MessageStore.getStartDelay(this, roomId)
+        seekStartDelay.progress = savedStartDelay
+        tvStartDelayLabel.text = "${savedStartDelay}초"
+        seekStartDelay.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, p: Int, fromUser: Boolean) {
+                tvStartDelayLabel.text = "${p}초"
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                MessageStore.saveStartDelay(this@NotificationScreenActivity, roomId, sb?.progress ?: 3)
+            }
+        })
+
         // 미리보기 버튼
         btnPreview.setOnClickListener {
             sheet.dismiss()
