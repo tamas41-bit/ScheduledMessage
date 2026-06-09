@@ -29,6 +29,7 @@ class AlarmReceiver : BroadcastReceiver() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("message_id", msgId)
             putExtra("message_text", msgText)
+            putExtra("room_id", roomId)
             putExtra("room_name", room?.name ?: "예약 메세지")
             putExtra("icon_uri", iconUri)
         }
