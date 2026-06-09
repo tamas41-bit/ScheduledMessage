@@ -21,6 +21,8 @@ class AlarmDisplayActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAlarmDisplayBinding
     private lateinit var cardAdapter: NotificationCardAdapter
     private val clockHandler = Handler(Looper.getMainLooper())
+    private val msgHandler = Handler(Looper.getMainLooper())
+    private val scheduledRunnables = mutableListOf<Runnable>()
     private var clockRunnable: Runnable? = null
     private var roomId: Int = 0
 
@@ -43,10 +45,22 @@ class AlarmDisplayActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         roomId = intent.getIntExtra("room_id", 0)
+        val roomName = intent.getStringExtra("room_name") ?: "예약 메세지"
+        val iconUri = intent.getStringExtra("icon_uri")
+
+        @Suppress("UNCHECKED_CAST", "DEPRECATION")
+        val messages: List<ScheduledMessage> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra("messages", ScheduledMessage::class.java) ?: emptyList()
+        } else {
+            intent.getParcelableArrayListExtra<ScheduledMessage>("messages") ?: emptyList()
+        }
+
         setupRecyclerView()
-        loadBackground()
         applyClockSettings()
-        startClock()
+
+        // 처음엔 배경과 시계를 숨김 (완전히 까만 화면)
+        binding.ivBackground.visibility = View.INVISIBLE
+        binding.layoutClock.visibility = View.INVISIBLE
 
         // 저장된 시계 위치 복원
         binding.root.post {
@@ -57,13 +71,37 @@ class AlarmDisplayActivity : AppCompatActivity() {
             binding.layoutClock.y = yPct * parent.height - binding.layoutClock.height / 2f
         }
 
-        handleIntent()
-    }
+        if (messages.isEmpty()) {
+            finish()
+            return
+        }
 
-    override fun onNewIntent(intent: android.content.Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleIntent()
+        // 첫 메세지 딜레이 시각에 배경+시계 공개
+        val firstDelay = messages.minOf { it.delaySeconds } * 1000L
+        val revealR = Runnable {
+            loadBackground()
+            startClock()
+            binding.ivBackground.visibility = View.VISIBLE
+            binding.layoutClock.visibility = View.VISIBLE
+        }
+        scheduledRunnables.add(revealR)
+        msgHandler.postDelayed(revealR, firstDelay)
+
+        // 각 메세지를 해당 딜레이에 카드 추가
+        messages.forEach { msg ->
+            val r = Runnable {
+                cardAdapter.addCard(
+                    NotificationCard(
+                        roomName = roomName,
+                        messageText = msg.text,
+                        roomIconUri = iconUri
+                    )
+                )
+                binding.rvCards.scrollToPosition(0)
+            }
+            scheduledRunnables.add(r)
+            msgHandler.postDelayed(r, msg.delaySeconds * 1000L)
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -74,6 +112,8 @@ class AlarmDisplayActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         clockRunnable?.let { clockHandler.removeCallbacks(it) }
+        scheduledRunnables.forEach { msgHandler.removeCallbacks(it) }
+        scheduledRunnables.clear()
     }
 
     private fun hideSystemUI() {
@@ -134,19 +174,5 @@ class AlarmDisplayActivity : AppCompatActivity() {
         binding.rvCards.itemAnimator = NotificationCardAnimator()
         binding.rvCards.adapter = cardAdapter
         cardAdapter.attachSwipeToDismiss(binding.rvCards)
-    }
-
-    private fun handleIntent() {
-        val roomName = intent.getStringExtra("room_name") ?: return
-        val messageText = intent.getStringExtra("message_text") ?: return
-        val roomIconUri = intent.getStringExtra("icon_uri")
-        cardAdapter.addCard(
-            NotificationCard(
-                roomName = roomName,
-                messageText = messageText,
-                roomIconUri = roomIconUri
-            )
-        )
-        binding.rvCards.scrollToPosition(0)
     }
 }

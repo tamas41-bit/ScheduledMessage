@@ -88,23 +88,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         val room = RoomStore.getAll(this).find { it.id == roomId }
-        val iconUri = room?.iconUri
 
-        messages.forEach { msg ->
-            val r = Runnable {
-                val intent = Intent(this, AlarmDisplayActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    putExtra("message_id", msg.id)
-                    putExtra("message_text", msg.text)
-                    putExtra("room_id", roomId)
-                    putExtra("room_name", room?.name ?: "예약 메세지")
-                    putExtra("icon_uri", iconUri)
-                }
-                startActivity(intent)
-            }
-            scheduledRunnables.add(r)
-            handler.postDelayed(r, msg.delaySeconds * 1000L)
+        // AlarmDisplayActivity를 즉시 실행 (검은 화면으로 시작)
+        val intent = Intent(this, AlarmDisplayActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra("room_id", roomId)
+            putExtra("room_name", room?.name ?: "예약 메세지")
+            putExtra("icon_uri", room?.iconUri)
+            putParcelableArrayListExtra("messages", ArrayList(messages))
         }
+        startActivity(intent)
 
         isNotifRunning = true
         binding.btnStartNotif.text = "■ 알림 중지"
@@ -116,8 +109,6 @@ class MainActivity : AppCompatActivity() {
         val resetR = Runnable { resetNotifButton() }
         scheduledRunnables.add(resetR)
         handler.postDelayed(resetR, maxDelay + 500L)
-
-        Toast.makeText(this, "알림 시작!", Toast.LENGTH_SHORT).show()
     }
 
     private fun stopNotif() {
