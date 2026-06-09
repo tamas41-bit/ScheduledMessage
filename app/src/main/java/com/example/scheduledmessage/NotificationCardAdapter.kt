@@ -1,6 +1,7 @@
 package com.example.scheduledmessage
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -36,11 +37,16 @@ class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<Notifi
         val argb = (alpha shl 24) or rgb
         holder.b.root.setCardBackgroundColor(argb)
 
-        // 메세지별 글자색 (설정 없으면 기본값)
+        // 메세지별 글자색
         holder.b.tvCardMessage.setTextColor(
             if (card.textColor != null) Color.parseColor(card.textColor)
             else Color.parseColor("#F0F0F5")
         )
+        // 메세지별 글자 굵기
+        holder.b.tvCardMessage.typeface =
+            if (card.textBold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+        // 메세지별 글자 크기
+        holder.b.tvCardMessage.textSize = (card.textSizeSp ?: 14).toFloat()
 
         val cornerPx = (8 * ctx.resources.displayMetrics.density).toInt()
         if (card.roomIconUri != null) {

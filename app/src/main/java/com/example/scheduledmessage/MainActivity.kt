@@ -11,6 +11,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.SeekBar
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +47,8 @@ class MainActivity : AppCompatActivity() {
     private var pendingEditIconView: ImageView? = null
     private var pendingIconUri: String? = null
     private var pendingTextColor: String? = null
+    private var pendingBold: Boolean = false
+    private var pendingSize: Int? = null
 
     private val msgIconPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -177,6 +181,8 @@ class MainActivity : AppCompatActivity() {
         pendingEditMsg = msg
         pendingIconUri = msg.iconUri
         pendingTextColor = msg.textColor
+        pendingBold = msg.textBold
+        pendingSize = msg.textSizeSp
 
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
         val etDelay = view.findViewById<EditText>(R.id.etDelaySeconds)
@@ -186,6 +192,16 @@ class MainActivity : AppCompatActivity() {
         val btnClearIcon = view.findViewById<android.widget.Button>(R.id.btnClearMsgIcon)
         val tvSelectedColor = view.findViewById<TextView>(R.id.tvSelectedColor)
         val viewColorDot = view.findViewById<View>(R.id.viewColorDot)
+        val seekR = view.findViewById<SeekBar>(R.id.seekColorR)
+        val seekG = view.findViewById<SeekBar>(R.id.seekColorG)
+        val seekB = view.findViewById<SeekBar>(R.id.seekColorB)
+        val tvR = view.findViewById<TextView>(R.id.tvColorR)
+        val tvG = view.findViewById<TextView>(R.id.tvColorG)
+        val tvB = view.findViewById<TextView>(R.id.tvColorB)
+        val switchBold = view.findViewById<Switch>(R.id.switchTextBold)
+        val seekSize = view.findViewById<SeekBar>(R.id.seekTextSize)
+        val tvSizeLabel = view.findViewById<TextView>(R.id.tvTextSizeLabel)
+        val btnResetSize = view.findViewById<android.widget.Button>(R.id.btnResetTextSize)
 
         tvTitle.text = "\"${msg.text.take(20)}${if (msg.text.length > 20) "…" else ""}\""
         etDelay.setText(msg.delaySeconds.toString())
@@ -196,40 +212,107 @@ class MainActivity : AppCompatActivity() {
             Glide.with(this).load(Uri.parse(msg.iconUri)).circleCrop().into(ivMsgIcon)
         }
 
-        btnPickIcon.setOnClickListener {
-            msgIconPickerLauncher.launch("image/*")
-        }
+        btnPickIcon.setOnClickListener { msgIconPickerLauncher.launch("image/*") }
         btnClearIcon.setOnClickListener {
             pendingIconUri = null
             ivMsgIcon.setImageResource(R.drawable.ic_notification_icon)
         }
 
-        // 색상 스와치 선택
-        fun selectColor(hex: String?, label: String) {
+        // ── 색상 헬퍼 ──────────────────────────────────────────
+        fun updateColorPreview(hex: String?) {
             pendingTextColor = hex
-            tvSelectedColor.text = label
             if (hex != null) {
+                tvSelectedColor.text = hex
+                tvSelectedColor.setTextColor(Color.parseColor(hex))
                 viewColorDot.visibility = View.VISIBLE
                 viewColorDot.setBackgroundColor(Color.parseColor(hex))
             } else {
+                tvSelectedColor.text = "기본값"
+                tvSelectedColor.setTextColor(Color.parseColor("#AAAAAA"))
                 viewColorDot.visibility = View.INVISIBLE
             }
         }
 
-        // 초기 색상 표시
-        if (msg.textColor != null) {
-            selectColor(msg.textColor, msg.textColor)
-        } else {
-            selectColor(null, "기본값")
+        // RGB → hex 문자열 변환
+        fun rgbToHex(r: Int, g: Int, b: Int) = String.format("#%02X%02X%02X", r, g, b)
+
+        // RGB 슬라이더 → 색상 동기화
+        fun syncFromSliders() {
+            val hex = rgbToHex(seekR.progress, seekG.progress, seekB.progress)
+            updateColorPreview(hex)
         }
 
-        view.findViewById<View>(R.id.swatchDefault).setOnClickListener { selectColor(null, "기본값") }
-        view.findViewById<View>(R.id.swatchWhite).setOnClickListener  { selectColor("#F0F0F5", "#F0F0F5") }
-        view.findViewById<View>(R.id.swatchYellow).setOnClickListener { selectColor("#FFE066", "#FFE066") }
-        view.findViewById<View>(R.id.swatchSky).setOnClickListener    { selectColor("#7EC8E3", "#7EC8E3") }
-        view.findViewById<View>(R.id.swatchGreen).setOnClickListener  { selectColor("#6BFF8A", "#6BFF8A") }
-        view.findViewById<View>(R.id.swatchPink).setOnClickListener   { selectColor("#FFB3C6", "#FFB3C6") }
-        view.findViewById<View>(R.id.swatchOrange).setOnClickListener { selectColor("#FFAA55", "#FFAA55") }
+        // 스와치 → RGB 슬라이더 동기화
+        fun setColorFromHex(hex: String?) {
+            if (hex == null) {
+                // 기본값: 초기 슬라이더 값 (기본 흰색 계열 #F0F0F5)
+                seekR.progress = 240; seekG.progress = 240; seekB.progress = 245
+                tvR.text = "240"; tvG.text = "240"; tvB.text = "245"
+                updateColorPreview(null)
+            } else {
+                val c = Color.parseColor(hex)
+                seekR.progress = Color.red(c)
+                seekG.progress = Color.green(c)
+                seekB.progress = Color.blue(c)
+                tvR.text = Color.red(c).toString()
+                tvG.text = Color.green(c).toString()
+                tvB.text = Color.blue(c).toString()
+                updateColorPreview(hex)
+            }
+        }
+
+        // 초기 색상 로드
+        setColorFromHex(msg.textColor)
+
+        // RGB SeekBar 리스너
+        val rgbListener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                tvR.text = seekR.progress.toString()
+                tvG.text = seekG.progress.toString()
+                tvB.text = seekB.progress.toString()
+                syncFromSliders()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        }
+        seekR.setOnSeekBarChangeListener(rgbListener)
+        seekG.setOnSeekBarChangeListener(rgbListener)
+        seekB.setOnSeekBarChangeListener(rgbListener)
+
+        // 색상 스와치
+        view.findViewById<View>(R.id.swatchDefault).setOnClickListener { setColorFromHex(null) }
+        view.findViewById<View>(R.id.swatchWhite).setOnClickListener   { setColorFromHex("#F0F0F5") }
+        view.findViewById<View>(R.id.swatchYellow).setOnClickListener  { setColorFromHex("#FFE066") }
+        view.findViewById<View>(R.id.swatchSky).setOnClickListener     { setColorFromHex("#7EC8E3") }
+        view.findViewById<View>(R.id.swatchGreen).setOnClickListener   { setColorFromHex("#6BFF8A") }
+        view.findViewById<View>(R.id.swatchPink).setOnClickListener    { setColorFromHex("#FFB3C6") }
+        view.findViewById<View>(R.id.swatchOrange).setOnClickListener  { setColorFromHex("#FFAA55") }
+        view.findViewById<View>(R.id.swatchRed).setOnClickListener     { setColorFromHex("#FF4444") }
+
+        // ── 글자 굵기 ────────────────────────────────────────────
+        switchBold.isChecked = msg.textBold
+        switchBold.setOnCheckedChangeListener { _, checked -> pendingBold = checked }
+
+        // ── 글자 크기 ─────────────────────────────────────────────
+        val initSize = msg.textSizeSp ?: 14
+        seekSize.progress = initSize
+        tvSizeLabel.text = if (msg.textSizeSp == null) "기본(14sp)" else "${initSize}sp"
+
+        seekSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) {
+                pendingSize = v
+                tvSizeLabel.text = "${v}sp"
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        btnResetSize.setOnClickListener {
+            pendingSize = null
+            seekSize.progress = 14
+            tvSizeLabel.text = "기본(14sp)"
+        }
 
         AlertDialog.Builder(this)
             .setTitle("메세지 설정")
@@ -243,7 +326,9 @@ class MainActivity : AppCompatActivity() {
                 val updated = msg.copy(
                     delaySeconds = delay,
                     iconUri = pendingIconUri,
-                    textColor = pendingTextColor
+                    textColor = pendingTextColor,
+                    textBold = pendingBold,
+                    textSizeSp = pendingSize
                 )
                 MessageStore.update(this, roomId, updated)
                 refreshList()
