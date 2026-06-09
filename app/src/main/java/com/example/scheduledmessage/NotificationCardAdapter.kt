@@ -36,6 +36,12 @@ class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<Notifi
         val argb = (alpha shl 24) or rgb
         holder.b.root.setCardBackgroundColor(argb)
 
+        // 메세지별 글자색 (설정 없으면 기본값)
+        holder.b.tvCardMessage.setTextColor(
+            if (card.textColor != null) Color.parseColor(card.textColor)
+            else Color.parseColor("#F0F0F5")
+        )
+
         val cornerPx = (8 * ctx.resources.displayMetrics.density).toInt()
         if (card.roomIconUri != null) {
             Glide.with(ctx)

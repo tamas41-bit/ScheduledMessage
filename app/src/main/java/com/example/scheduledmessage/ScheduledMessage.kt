@@ -8,7 +8,9 @@ data class ScheduledMessage(
     val id: Int,
     val text: String,
     val delaySeconds: Int = 0,   // 알림 시작 후 몇 초 뒤에 표시
-    val isEnabled: Boolean = true
+    val isEnabled: Boolean = true,
+    val iconUri: String? = null,     // 메세지별 프로필 사진 (null=기본값 사용)
+    val textColor: String? = null    // 메세지별 글자색 hex (null=기본값 사용)
 ) : Parcelable {
     fun delayString(): String = if (delaySeconds == 0) "즉시" else "${delaySeconds}초 후"
 }

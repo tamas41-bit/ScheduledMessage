@@ -2,12 +2,15 @@
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +37,22 @@ class MainActivity : AppCompatActivity() {
             RoomStore.update(this, room.copy(iconUri = it.toString()))
             loadRoomProfile()
             Toast.makeText(this, "프로필 이미지가 변경되었습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 메세지별 아이콘 피커
+    private var pendingEditMsg: ScheduledMessage? = null
+    private var pendingEditIconView: ImageView? = null
+    private var pendingIconUri: String? = null
+    private var pendingTextColor: String? = null
+
+    private val msgIconPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            pendingIconUri = it.toString()
+            pendingEditIconView?.let { iv ->
+                Glide.with(this).load(it).circleCrop().into(iv)
+            }
         }
     }
 
@@ -154,15 +173,66 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showEditDelayDialog(msg: ScheduledMessage) {
+        // 편집 상태 초기화
+        pendingEditMsg = msg
+        pendingIconUri = msg.iconUri
+        pendingTextColor = msg.textColor
+
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
         val etDelay = view.findViewById<EditText>(R.id.etDelaySeconds)
         val tvTitle = view.findViewById<TextView>(R.id.tvDialogTitle)
+        val ivMsgIcon = view.findViewById<ImageView>(R.id.ivMsgIcon)
+        val btnPickIcon = view.findViewById<android.widget.Button>(R.id.btnPickMsgIcon)
+        val btnClearIcon = view.findViewById<android.widget.Button>(R.id.btnClearMsgIcon)
+        val tvSelectedColor = view.findViewById<TextView>(R.id.tvSelectedColor)
+        val viewColorDot = view.findViewById<View>(R.id.viewColorDot)
 
         tvTitle.text = "\"${msg.text.take(20)}${if (msg.text.length > 20) "…" else ""}\""
         etDelay.setText(msg.delaySeconds.toString())
 
+        // 아이콘 미리보기
+        pendingEditIconView = ivMsgIcon
+        if (msg.iconUri != null) {
+            Glide.with(this).load(Uri.parse(msg.iconUri)).circleCrop().into(ivMsgIcon)
+        }
+
+        btnPickIcon.setOnClickListener {
+            msgIconPickerLauncher.launch("image/*")
+        }
+        btnClearIcon.setOnClickListener {
+            pendingIconUri = null
+            ivMsgIcon.setImageResource(R.drawable.ic_notification_icon)
+        }
+
+        // 색상 스와치 선택
+        fun selectColor(hex: String?, label: String) {
+            pendingTextColor = hex
+            tvSelectedColor.text = label
+            if (hex != null) {
+                viewColorDot.visibility = View.VISIBLE
+                viewColorDot.setBackgroundColor(Color.parseColor(hex))
+            } else {
+                viewColorDot.visibility = View.INVISIBLE
+            }
+        }
+
+        // 초기 색상 표시
+        if (msg.textColor != null) {
+            selectColor(msg.textColor, msg.textColor)
+        } else {
+            selectColor(null, "기본값")
+        }
+
+        view.findViewById<View>(R.id.swatchDefault).setOnClickListener { selectColor(null, "기본값") }
+        view.findViewById<View>(R.id.swatchWhite).setOnClickListener  { selectColor("#F0F0F5", "#F0F0F5") }
+        view.findViewById<View>(R.id.swatchYellow).setOnClickListener { selectColor("#FFE066", "#FFE066") }
+        view.findViewById<View>(R.id.swatchSky).setOnClickListener    { selectColor("#7EC8E3", "#7EC8E3") }
+        view.findViewById<View>(R.id.swatchGreen).setOnClickListener  { selectColor("#6BFF8A", "#6BFF8A") }
+        view.findViewById<View>(R.id.swatchPink).setOnClickListener   { selectColor("#FFB3C6", "#FFB3C6") }
+        view.findViewById<View>(R.id.swatchOrange).setOnClickListener { selectColor("#FFAA55", "#FFAA55") }
+
         AlertDialog.Builder(this)
-            .setTitle("알림 딜레이 설정")
+            .setTitle("메세지 설정")
             .setView(view)
             .setPositiveButton("저장") { _, _ ->
                 val delay = etDelay.text.toString().toIntOrNull()
@@ -170,7 +240,11 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "올바른 초를 입력해주세요", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                val updated = msg.copy(delaySeconds = delay)
+                val updated = msg.copy(
+                    delaySeconds = delay,
+                    iconUri = pendingIconUri,
+                    textColor = pendingTextColor
+                )
                 MessageStore.update(this, roomId, updated)
                 refreshList()
             }

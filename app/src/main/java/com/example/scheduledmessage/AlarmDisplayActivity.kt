@@ -97,7 +97,8 @@ class AlarmDisplayActivity : AppCompatActivity() {
                     NotificationCard(
                         roomName = roomName,
                         messageText = msg.text,
-                        roomIconUri = iconUri
+                        roomIconUri = msg.iconUri ?: iconUri,
+                        textColor = msg.textColor
                     )
                 )
                 binding.rvCards.scrollToPosition(0)
