@@ -57,6 +57,17 @@ class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<Notifi
         } else {
             holder.b.ivCardIcon.setImageResource(R.drawable.ic_notification_icon)
         }
+
+        // 첨부 이미지
+        if (card.imageUri != null) {
+            holder.b.ivCardImage.visibility = android.view.View.VISIBLE
+            Glide.with(ctx)
+                .load(Uri.parse(card.imageUri))
+                .apply(RequestOptions().centerCrop().transform(RoundedCorners(cornerPx)))
+                .into(holder.b.ivCardImage)
+        } else {
+            holder.b.ivCardImage.visibility = android.view.View.GONE
+        }
     }
 
     fun addCard(card: NotificationCard) {

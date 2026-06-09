@@ -49,6 +49,9 @@ class MainActivity : AppCompatActivity() {
     private var pendingTextColor: String? = null
     private var pendingBold: Boolean = false
     private var pendingSize: Int? = null
+    private var pendingImageUri: String? = null
+    private var pendingEditImageView: ImageView? = null
+    private var pendingNoImageView: android.widget.TextView? = null
 
     private val msgIconPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -56,6 +59,18 @@ class MainActivity : AppCompatActivity() {
             pendingIconUri = it.toString()
             pendingEditIconView?.let { iv ->
                 Glide.with(this).load(it).circleCrop().into(iv)
+            }
+        }
+    }
+
+    private val msgImagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            pendingImageUri = it.toString()
+            pendingEditImageView?.let { iv ->
+                iv.visibility = View.VISIBLE
+                pendingNoImageView?.visibility = View.GONE
+                Glide.with(this).load(it).centerCrop().into(iv)
             }
         }
     }
@@ -183,6 +198,7 @@ class MainActivity : AppCompatActivity() {
         pendingTextColor = msg.textColor
         pendingBold = msg.textBold
         pendingSize = msg.textSizeSp
+        pendingImageUri = msg.imageUri
 
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
         val etDelay = view.findViewById<EditText>(R.id.etDelaySeconds)
@@ -314,6 +330,29 @@ class MainActivity : AppCompatActivity() {
             tvSizeLabel.text = "기본(14sp)"
         }
 
+        // ── 첨부 이미지 ───────────────────────────────────────────
+        val ivMsgImage = view.findViewById<ImageView>(R.id.ivMsgImage)
+        val tvNoImage = view.findViewById<android.widget.TextView>(R.id.tvNoImage)
+        val btnPickImage = view.findViewById<android.widget.Button>(R.id.btnPickMsgImage)
+        val btnClearImage = view.findViewById<android.widget.Button>(R.id.btnClearMsgImage)
+
+        pendingEditImageView = ivMsgImage
+        pendingNoImageView = tvNoImage
+
+        if (msg.imageUri != null) {
+            ivMsgImage.visibility = View.VISIBLE
+            tvNoImage.visibility = View.GONE
+            Glide.with(this).load(Uri.parse(msg.imageUri)).centerCrop().into(ivMsgImage)
+        }
+
+        btnPickImage.setOnClickListener { msgImagePickerLauncher.launch("image/*") }
+        btnClearImage.setOnClickListener {
+            pendingImageUri = null
+            ivMsgImage.visibility = View.GONE
+            tvNoImage.visibility = View.VISIBLE
+            ivMsgImage.setImageDrawable(null)
+        }
+
         AlertDialog.Builder(this)
             .setTitle("메세지 설정")
             .setView(view)
@@ -328,7 +367,8 @@ class MainActivity : AppCompatActivity() {
                     iconUri = pendingIconUri,
                     textColor = pendingTextColor,
                     textBold = pendingBold,
-                    textSizeSp = pendingSize
+                    textSizeSp = pendingSize,
+                    imageUri = pendingImageUri
                 )
                 MessageStore.update(this, roomId, updated)
                 refreshList()

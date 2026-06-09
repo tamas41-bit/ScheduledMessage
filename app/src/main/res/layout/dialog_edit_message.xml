@@ -329,5 +329,68 @@
         android:textColor="#AAAAAA"
         android:stateListAnimator="@null"/>
 
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="#333333" android:layout_marginTop="20dp" android:layout_marginBottom="20dp"/>
+
+    <!-- 첨부 이미지 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="첨부 이미지"
+        android:textSize="13sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginBottom="10dp" />
+
+    <!-- 이미지 미리보기 -->
+    <ImageView
+        android:id="@+id/ivMsgImage"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:scaleType="centerCrop"
+        android:clipToOutline="true"
+        android:background="#1A1A1A"
+        android:visibility="gone"
+        android:layout_marginBottom="10dp"/>
+
+    <!-- 이미지 없을 때 안내 -->
+    <TextView
+        android:id="@+id/tvNoImage"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:gravity="center"
+        android:text="이미지 없음"
+        android:textSize="13sp"
+        android:textColor="#555555"
+        android:background="#1A1A1A"
+        android:layout_marginBottom="10dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnPickMsgImage"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="이미지 추가"
+            android:textSize="13sp"
+            android:backgroundTint="#444444"
+            android:textColor="#FFFFFF"
+            android:stateListAnimator="@null"/>
+
+        <Button
+            android:id="@+id/btnClearMsgImage"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="제거"
+            android:textSize="13sp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#333333"
+            android:textColor="#AAAAAA"
+            android:stateListAnimator="@null"/>
+
+    </LinearLayout>
+
 </LinearLayout>
 </ScrollView>
