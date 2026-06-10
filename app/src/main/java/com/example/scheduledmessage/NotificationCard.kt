@@ -8,5 +8,7 @@ data class NotificationCard(
     val textBold: Boolean = false,
     val textSizeSp: Int? = null,      // null = 기본값 14sp
     val imageUri: String? = null,     // 카드에 표시할 이미지
+    val nameColor: String? = null,   // 이름 글자색 (null=기본값)
+    val nameSizeSp: Int? = null,     // 이름 글자 크기 (null=기본값 16sp)
     val timestampMs: Long = System.currentTimeMillis()   // 수신 시각 (상대시간 계산용)
 )

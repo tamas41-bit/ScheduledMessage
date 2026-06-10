@@ -26,6 +26,11 @@ class NotificationCardAdapter(var roomId: Int = 0) : RecyclerView.Adapter<Notifi
     override fun onBindViewHolder(holder: VH, position: Int) {
         val card = items[position]
         holder.b.tvCardRoomName.text = card.roomName
+        holder.b.tvCardRoomName.setTextColor(
+            if (card.nameColor != null) Color.parseColor(card.nameColor)
+            else Color.parseColor("#BFEBEBF5")
+        )
+        holder.b.tvCardRoomName.textSize = (card.nameSizeSp ?: 16).toFloat()
         holder.b.tvCardMessage.text  = card.messageText
         holder.b.tvCardTime.text     = relativeTime(card.timestampMs)
 

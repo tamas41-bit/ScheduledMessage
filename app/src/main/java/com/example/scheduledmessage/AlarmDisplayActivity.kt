@@ -101,7 +101,9 @@ class AlarmDisplayActivity : AppCompatActivity() {
                         textColor = msg.textColor,
                         textBold = msg.textBold,
                         textSizeSp = msg.textSizeSp,
-                        imageUri = msg.imageUri
+                        imageUri = msg.imageUri,
+                        nameColor = msg.nameColor,
+                        nameSizeSp = msg.nameSizeSp
                     )
                 )
                 binding.rvCards.scrollToPosition(0)

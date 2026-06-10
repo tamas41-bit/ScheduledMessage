@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private var pendingImageUri: String? = null
     private var pendingEditImageView: ImageView? = null
     private var pendingNoImageView: android.widget.TextView? = null
+    private var pendingNameColor: String? = null
+    private var pendingNameSize: Int? = null
 
     private val msgIconPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -199,6 +201,8 @@ class MainActivity : AppCompatActivity() {
         pendingBold = msg.textBold
         pendingSize = msg.textSizeSp
         pendingImageUri = msg.imageUri
+        pendingNameColor = msg.nameColor
+        pendingNameSize = msg.nameSizeSp
 
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_message, null)
         val etDelay = view.findViewById<EditText>(R.id.etDelaySeconds)
@@ -353,6 +357,97 @@ class MainActivity : AppCompatActivity() {
             ivMsgImage.setImageDrawable(null)
         }
 
+        // ── 이름 색상 ─────────────────────────────────────────────
+        val tvNameSelectedColor = view.findViewById<TextView>(R.id.tvNameSelectedColor)
+        val viewNameColorDot = view.findViewById<View>(R.id.viewNameColorDot)
+        val seekNR = view.findViewById<SeekBar>(R.id.seekNameColorR)
+        val seekNG = view.findViewById<SeekBar>(R.id.seekNameColorG)
+        val seekNB = view.findViewById<SeekBar>(R.id.seekNameColorB)
+        val tvNR = view.findViewById<TextView>(R.id.tvNameColorR)
+        val tvNG = view.findViewById<TextView>(R.id.tvNameColorG)
+        val tvNB = view.findViewById<TextView>(R.id.tvNameColorB)
+        val seekNameSize = view.findViewById<SeekBar>(R.id.seekNameSize)
+        val tvNameSizeLabel = view.findViewById<TextView>(R.id.tvNameSizeLabel)
+        val btnResetNameSize = view.findViewById<android.widget.Button>(R.id.btnResetNameSize)
+
+        fun updateNameColorPreview(hex: String?) {
+            pendingNameColor = hex
+            if (hex != null) {
+                tvNameSelectedColor.text = hex
+                tvNameSelectedColor.setTextColor(Color.parseColor(hex))
+                viewNameColorDot.visibility = View.VISIBLE
+                viewNameColorDot.setBackgroundColor(Color.parseColor(hex))
+            } else {
+                tvNameSelectedColor.text = "기본값"
+                tvNameSelectedColor.setTextColor(Color.parseColor("#AAAAAA"))
+                viewNameColorDot.visibility = View.INVISIBLE
+            }
+        }
+
+        fun setNameColorFromHex(hex: String?) {
+            if (hex == null) {
+                seekNR.progress = 191; seekNG.progress = 235; seekNB.progress = 245
+                tvNR.text = "191"; tvNG.text = "235"; tvNB.text = "245"
+                updateNameColorPreview(null)
+            } else {
+                val c = Color.parseColor(hex)
+                seekNR.progress = Color.red(c)
+                seekNG.progress = Color.green(c)
+                seekNB.progress = Color.blue(c)
+                tvNR.text = Color.red(c).toString()
+                tvNG.text = Color.green(c).toString()
+                tvNB.text = Color.blue(c).toString()
+                updateNameColorPreview(hex)
+            }
+        }
+
+        setNameColorFromHex(msg.nameColor)
+
+        val nameRgbListener = object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                tvNR.text = seekNR.progress.toString()
+                tvNG.text = seekNG.progress.toString()
+                tvNB.text = seekNB.progress.toString()
+                val hex = String.format("#%02X%02X%02X", seekNR.progress, seekNG.progress, seekNB.progress)
+                updateNameColorPreview(hex)
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        }
+        seekNR.setOnSeekBarChangeListener(nameRgbListener)
+        seekNG.setOnSeekBarChangeListener(nameRgbListener)
+        seekNB.setOnSeekBarChangeListener(nameRgbListener)
+
+        view.findViewById<View>(R.id.nameSwatchDefault).setOnClickListener { setNameColorFromHex(null) }
+        view.findViewById<View>(R.id.nameSwatchWhite).setOnClickListener   { setNameColorFromHex("#F0F0F5") }
+        view.findViewById<View>(R.id.nameSwatchYellow).setOnClickListener  { setNameColorFromHex("#FFE066") }
+        view.findViewById<View>(R.id.nameSwatchSky).setOnClickListener     { setNameColorFromHex("#7EC8E3") }
+        view.findViewById<View>(R.id.nameSwatchGreen).setOnClickListener   { setNameColorFromHex("#6BFF8A") }
+        view.findViewById<View>(R.id.nameSwatchPink).setOnClickListener    { setNameColorFromHex("#FFB3C6") }
+        view.findViewById<View>(R.id.nameSwatchOrange).setOnClickListener  { setNameColorFromHex("#FFAA55") }
+        view.findViewById<View>(R.id.nameSwatchRed).setOnClickListener     { setNameColorFromHex("#FF4444") }
+
+        // ── 이름 크기 ─────────────────────────────────────────────
+        val initNameSize = msg.nameSizeSp ?: 16
+        seekNameSize.progress = initNameSize
+        tvNameSizeLabel.text = if (msg.nameSizeSp == null) "기본(16sp)" else "${initNameSize}sp"
+
+        seekNameSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) {
+                pendingNameSize = v
+                tvNameSizeLabel.text = "${v}sp"
+            }
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
+        })
+
+        btnResetNameSize.setOnClickListener {
+            pendingNameSize = null
+            seekNameSize.progress = 16
+            tvNameSizeLabel.text = "기본(16sp)"
+        }
+
         AlertDialog.Builder(this)
             .setTitle("메세지 설정")
             .setView(view)
@@ -368,7 +463,9 @@ class MainActivity : AppCompatActivity() {
                     textColor = pendingTextColor,
                     textBold = pendingBold,
                     textSizeSp = pendingSize,
-                    imageUri = pendingImageUri
+                    imageUri = pendingImageUri,
+                    nameColor = pendingNameColor,
+                    nameSizeSp = pendingNameSize
                 )
                 MessageStore.update(this, roomId, updated)
                 refreshList()
