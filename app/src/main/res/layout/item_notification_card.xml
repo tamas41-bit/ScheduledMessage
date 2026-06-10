@@ -64,7 +64,8 @@
                     android:layout_marginStart="6dp"
                     android:text="방금"
                     android:textColor="#80EBEBF5"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:visibility="gone"/>
 
             </LinearLayout>
 
